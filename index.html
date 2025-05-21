@@ -18,9 +18,8 @@
         <video id="promo1" autoplay loop="true" src="video1.mp4" crossorigin="anonymous"></video>
       </a-assets>
 
-      <a-entity camera></a-entity>
+      <!-- Custom camera with wider field of view for mobile -->
+      <a-entity camera="fov: 80; near: 0.1; far: 1000" arjs-camera="sourceType: webcam;"></a-entity>
     </a-scene>
   </body>
 </html>
-
-
