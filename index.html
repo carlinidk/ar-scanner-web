@@ -10,12 +10,12 @@
     <a-scene embedded arjs>
       <!-- Marker for a specific QR code (e.g., qr1.patt) -->
       <a-marker type="pattern" url="qr1.patt">
-        <!-- Display a unique video or 3D illustration -->
-        <a-video src="#promo1" width="1" height="0.6" position="0 0 0"></a-video>
+        <!-- Display a 3D model -->
+        <a-entity gltf-model="#model" scale="0.5 0.5 0.5" position="0 0 0"></a-entity>
       </a-marker>
 
       <a-assets>
-        <video id="promo1" autoplay loop="true" src="video1.mp4" crossorigin="anonymous"></video>
+        <a-asset-item id="model" src="Main_model.glb"></a-asset-item>
       </a-assets>
 
       <!-- Custom camera with wider field of view for mobile -->
