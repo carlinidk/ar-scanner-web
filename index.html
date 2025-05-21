@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>WebAR QR Scanner</title>
+    <title>WebAR QR Scanner - QR 2</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.min.js"></script>
   </head>
   <body style="margin: 0; overflow: hidden">
     <a-scene embedded arjs>
-      <!-- Marker for a specific QR code (e.g., qr1.patt) -->
+      <!-- Marker for second QR code (e.g., qr2.patt) -->
       <a-marker type="pattern" url="qr1.patt">
-        <!-- Display a 3D model -->
+        <!-- Display the same 3D model on this second marker -->
         <a-entity gltf-model="#model" scale="0.5 0.5 0.5" position="0 0 0"></a-entity>
       </a-marker>
 
