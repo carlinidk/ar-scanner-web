@@ -3,35 +3,17 @@
   <head>
     <title>WebAR QR Scanner - QR 1</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    
-    <!-- A-Frame + AR.js -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.min.js"></script>
-
-    <!-- Gesture component -->
-    <script src="https://cdn.jsdelivr.net/npm/aframe-gesture-component@4.0.5/dist/aframe-gesture-component.min.js"></script>
-
     <style>
-      html, body, a-scene {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        width: 100%;
-        height: 100%;
-      }
+      html, body, a-scene { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
     </style>
   </head>
   <body>
-    <a-scene embedded arjs style="width:100%; height:100%; margin:0; padding:0;">
-      
+    <a-scene embedded arjs style="width:100%; height:100%;">
       <!-- Marker -->
       <a-marker type="pattern" url="qr1.patt">
-        <a-entity
-          gltf-model="#model"
-          scale="0.5 0.5 0.5"
-          rotation="0 0 0"
-          gesture-handler="enabled: true; drag: false; rotate: true; pinch: true"
-        ></a-entity>
+        <a-entity id="model" gltf-model="#model" scale="0.5 0.5 0.5" rotation="0 0 0"></a-entity>
       </a-marker>
 
       <!-- Assets -->
@@ -40,11 +22,35 @@
       </a-assets>
 
       <!-- Camera -->
-      <a-entity
-        camera="fov: 95; near: 0.01; far: 1000"
-        arjs-camera="sourceType: webcam"
-        position="0 0 0">
-      </a-entity>
+      <a-entity camera></a-entity>
     </a-scene>
+
+    <script>
+      const model = document.querySelector('#model');
+      let previousX = null;
+
+      // Touch start
+      document.addEventListener('touchstart', function (e) {
+        if (e.touches.length === 1) {
+          previousX = e.touches[0].clientX;
+        }
+      });
+
+      // Touch move → rotate model around Y axis
+      document.addEventListener('touchmove', function (e) {
+        if (e.touches.length === 1 && previousX !== null) {
+          const deltaX = e.touches[0].clientX - previousX;
+          let rotation = model.getAttribute('rotation');
+          rotation.y += deltaX * 0.5; // adjust sensitivity
+          model.setAttribute('rotation', rotation);
+          previousX = e.touches[0].clientX;
+        }
+      });
+
+      // Reset
+      document.addEventListener('touchend', function () {
+        previousX = null;
+      });
+    </script>
   </body>
 </html>
