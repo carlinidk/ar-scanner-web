@@ -11,7 +11,7 @@
     <!-- GLTF Loader -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
 
-    <!-- AR.js for Three.js -->
+    <!-- AR.js (three.js version) -->
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/three.js/build/ar-threex.js"></script>
 
     <style>
@@ -30,7 +30,8 @@
   </head>
   <body>
     <script>
-      let scene, camera, renderer, clock;
+      let scene, camera, renderer;
+      let arToolkitSource, arToolkitContext;
       let markerRoot, model;
 
       init();
@@ -46,36 +47,34 @@
 
         // Renderer
         renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setClearColor(new THREE.Color("lightgrey"), 0);
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         document.body.appendChild(renderer.domElement);
 
-        // ARToolkit
-        let arToolkitSource = new THREEx.ArToolkitSource({
+        // ARToolkit Source (camera)
+        arToolkitSource = new THREEx.ArToolkitSource({
           sourceType: "webcam",
-        });
-
-        arToolkitSource.init(function () {
-          setTimeout(() => {
-            onResize();
-          }, 2000);
-        });
-
-        window.addEventListener("resize", () => {
-          onResize();
         });
 
         function onResize() {
           arToolkitSource.onResizeElement();
           arToolkitSource.copyElementSizeTo(renderer.domElement);
           if (arToolkitContext.arController !== null) {
-            arToolkitSource.copyElementSizeTo(
-              arToolkitContext.arController.canvas
-            );
+            arToolkitSource.copyElementSizeTo(arToolkitContext.arController.canvas);
           }
         }
 
-        let arToolkitContext = new THREEx.ArToolkitContext({
+        arToolkitSource.init(() => {
+          onResize();
+        });
+
+        window.addEventListener("resize", () => {
+          onResize();
+        });
+
+        // ARToolkit Context (tracking + projection)
+        arToolkitContext = new THREEx.ArToolkitContext({
           cameraParametersUrl:
             "https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/three.js/data/camera_para.dat",
           detectionMode: "mono",
@@ -85,35 +84,27 @@
           camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
         });
 
-        // Update loop for AR
-        clock = new THREE.Clock();
-        function update() {
-          if (arToolkitSource.ready !== false) {
-            arToolkitContext.update(arToolkitSource.domElement);
-          }
-        }
-        renderer.setAnimationLoop(() => {
-          update();
-          renderer.render(scene, camera);
-        });
-
-        // Marker
+        // Marker root
         markerRoot = new THREE.Group();
         scene.add(markerRoot);
 
-        let markerControls = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
-          type: "pattern",
-          patternUrl: "qr1.patt", // <-- your marker file
-        });
+        let markerControls = new THREEx.ArMarkerControls(
+          arToolkitContext,
+          markerRoot,
+          {
+            type: "pattern",
+            patternUrl: "qr1.patt", // your pattern file
+          }
+        );
 
-        // Lighting
+        // Light
         let light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
         scene.add(light);
 
-        // Load GLB model
+        // Load model
         let loader = new THREE.GLTFLoader();
         loader.load(
-          "Main_model.glb", // <-- your model file
+          "Main_model.glb",
           function (gltf) {
             model = gltf.scene;
             model.scale.set(0.5, 0.5, 0.5);
@@ -127,8 +118,15 @@
         );
       }
 
+      function update() {
+        if (arToolkitSource.ready !== false) {
+          arToolkitContext.update(arToolkitSource.domElement);
+        }
+      }
+
       function animate() {
         requestAnimationFrame(animate);
+        update();
         renderer.render(scene, camera);
       }
     </script>
