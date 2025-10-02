@@ -1,132 +1,88 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <title>WebAR QR with Three.js + AR.js</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-
-    <!-- Three.js -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-
-    <!-- GLTF Loader -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
-
-    <!-- AR.js (three.js version) -->
+    <title>AR.js Camera Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/three.js/build/ar-threex.js"></script>
-
     <style>
-      body, html {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        width: 100%;
-        height: 100%;
-        background: black;
-      }
-      canvas {
-        display: block;
+      body { margin: 0; overflow: hidden; }
+      canvas, video {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
       }
     </style>
   </head>
   <body>
     <script>
-      let scene, camera, renderer;
-      let arToolkitSource, arToolkitContext;
-      let markerRoot, model;
+      let renderer, scene, camera, arToolkitSource, arToolkitContext;
 
       init();
       animate();
 
       function init() {
-        // Scene
-        scene = new THREE.Scene();
+        // Renderer
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
 
-        // Camera
+        // Scene + Camera
+        scene = new THREE.Scene();
         camera = new THREE.Camera();
         scene.add(camera);
 
-        // Renderer
-        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setClearColor(new THREE.Color("lightgrey"), 0);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        document.body.appendChild(renderer.domElement);
-
-        // ARToolkit Source (camera)
+        // AR.js Source
         arToolkitSource = new THREEx.ArToolkitSource({
           sourceType: "webcam",
+          facingMode: "environment" // ✅ back camera
         });
 
-        function onResize() {
-          arToolkitSource.onResizeElement();
-          arToolkitSource.copyElementSizeTo(renderer.domElement);
-          if (arToolkitContext.arController !== null) {
-            arToolkitSource.copyElementSizeTo(arToolkitContext.arController.canvas);
-          }
-        }
-
+        // Init video source
         arToolkitSource.init(() => {
           onResize();
         });
 
-        window.addEventListener("resize", () => {
-          onResize();
-        });
+        // Debug: force attach video element
+        if (arToolkitSource.domElement) {
+          arToolkitSource.domElement.setAttribute("id", "arjs-video");
+          arToolkitSource.domElement.setAttribute("playsinline", "");
+          arToolkitSource.domElement.style.position = "fixed";
+          arToolkitSource.domElement.style.top = "0";
+          arToolkitSource.domElement.style.left = "0";
+          arToolkitSource.domElement.style.width = "100%";
+          arToolkitSource.domElement.style.height = "100%";
+          arToolkitSource.domElement.style.zIndex = "-1";
+          document.body.appendChild(arToolkitSource.domElement);
+        }
 
-        // ARToolkit Context (tracking + projection)
+        // AR.js Context
         arToolkitContext = new THREEx.ArToolkitContext({
-          cameraParametersUrl:
-            "https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/three.js/data/camera_para.dat",
-          detectionMode: "mono",
+          cameraParametersUrl: "https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/three.js/data/camera_para.dat",
+          detectionMode: "mono"
         });
 
         arToolkitContext.init(() => {
           camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
         });
 
-        // Marker root
-        markerRoot = new THREE.Group();
-        scene.add(markerRoot);
-
-        let markerControls = new THREEx.ArMarkerControls(
-          arToolkitContext,
-          markerRoot,
-          {
-            type: "pattern",
-            patternUrl: "qr1.patt", // your pattern file
-          }
-        );
-
-        // Light
-        let light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-        scene.add(light);
-
-        // Load model
-        let loader = new THREE.GLTFLoader();
-        loader.load(
-          "Main_model.glb",
-          function (gltf) {
-            model = gltf.scene;
-            model.scale.set(0.5, 0.5, 0.5);
-            model.position.set(0, 0, 0);
-            markerRoot.add(model);
-          },
-          undefined,
-          function (error) {
-            console.error("Error loading model:", error);
-          }
-        );
+        window.addEventListener("resize", onResize);
       }
 
-      function update() {
-        if (arToolkitSource.ready !== false) {
-          arToolkitContext.update(arToolkitSource.domElement);
+      function onResize() {
+        arToolkitSource.onResize();
+        arToolkitSource.copySizeTo(renderer.domElement);
+        if (arToolkitContext.arController !== null) {
+          arToolkitSource.copySizeTo(arToolkitContext.arController.canvas);
         }
       }
 
       function animate() {
         requestAnimationFrame(animate);
-        update();
+
+        if (arToolkitSource.ready) {
+          arToolkitContext.update(arToolkitSource.domElement);
+        }
+
         renderer.render(scene, camera);
       }
     </script>
