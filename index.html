@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>WebAR QR Scanner - Enhanced</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>WebAR Live Feed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.min.js"></script>
     <style>
       html, body {
-        margin: 0; padding: 0; overflow: hidden;
-        width: 100%; height: 100%; background: #000;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        height: 100%;
+        width: 100%;
       }
+
       #loading {
         position: absolute;
         top: 0; left: 0;
@@ -17,51 +21,56 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(0,0,0,0.85);
-        color: #fff; font-family: sans-serif;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        font-family: sans-serif;
         z-index: 10;
+      }
+
+      /* hide loading smoothly */
+      #loading.hidden {
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        pointer-events: none;
       }
     </style>
   </head>
   <body>
-    <!-- Loading screen -->
-    <div id="loading">🔍 Initializing AR... please wait</div>
+    <div id="loading">📷 Accessing camera...</div>
 
     <a-scene
-      vr-mode-ui="enabled: false"
       embedded
-      arjs="sourceType: webcam; debugUIEnabled: false;"
-      style="width:100%; height:100%; margin:0; padding:0;"
+      vr-mode-ui="enabled: false"
+      renderer="antialias: true; alpha: true;"
+      arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;"
     >
+      
 
-      <!-- Lighting for better model rendering -->
-      <a-light type="ambient" intensity="0.7"></a-light>
-      <a-light type="directional" intensity="0.8" position="1 1 0.5"></a-light>
-
-      <!-- Marker for QR1 -->
+      <!-- Marker -->
       <a-marker type="pattern" url="qr1.patt">
-        <a-entity 
-          gltf-model="#planeModel" 
-          scale="0.15 0.15 0.15" 
-          rotation="0 180 0" 
-          animation="property: rotation; to: 0 540 0; loop: true; dur: 4000; easing: linear"
+        <a-entity
+          gltf-model="#planeModel"
+          scale="0.3 0.3 0.3"
+          rotation="0 180 0"
+          position="0 0 0"
+          animation="property: rotation; to: 0 540 0; loop: true; dur: 5000; easing: linear"
         ></a-entity>
       </a-marker>
 
-      <!-- Preload assets -->
+      <!-- Assets -->
       <a-assets>
-        <a-asset-item id="planeModel" src="Models/Seahawk.glb"></a-asset-item>
+        <a-asset-item id="planeModel" src="Models/iphone.glb"></a-asset-item>
       </a-assets>
 
-      <!-- Camera -->
       <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-      // Hide loading once camera is ready
-      document.querySelector('a-scene').addEventListener('loaded', () => {
+      // Hide loading overlay once camera feed starts
+      const scene = document.querySelector('a-scene');
+      scene.addEventListener('loaded', () => {
         const loading = document.getElementById('loading');
-        if (loading) loading.style.display = 'none';
+        if (loading) loading.classList.add('hidden');
       });
     </script>
   </body>
