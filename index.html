@@ -1,32 +1,68 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>WebAR QR Scanner - QR 1</title>
+    <title>WebAR QR Scanner - Enhanced</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.min.js"></script>
     <style>
-      html, body, a-scene {
-        margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%;
+      html, body {
+        margin: 0; padding: 0; overflow: hidden;
+        width: 100%; height: 100%; background: #000;
+      }
+      #loading {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0,0,0,0.85);
+        color: #fff; font-family: sans-serif;
+        z-index: 10;
       }
     </style>
   </head>
   <body>
-    <a-scene embedded arjs style="width:100%; height:100%; margin:0; padding:0;">
+    <!-- Loading screen -->
+    <div id="loading">🔍 Initializing AR... please wait</div>
+
+    <a-scene
+      vr-mode-ui="enabled: false"
+      embedded
+      arjs="sourceType: webcam; debugUIEnabled: false;"
+      style="width:100%; height:100%; margin:0; padding:0;"
+    >
+
+      <!-- Lighting for better model rendering -->
+      <a-light type="ambient" intensity="0.7"></a-light>
+      <a-light type="directional" intensity="0.8" position="1 1 0.5"></a-light>
+
       <!-- Marker for QR1 -->
       <a-marker type="pattern" url="qr1.patt">
-        <a-entity gltf-model="#planeModel" scale="1 1 1" position="0 0 0"></a-entity>
+        <a-entity 
+          gltf-model="#planeModel" 
+          scale="0.5 0.5 0.5" 
+          rotation="0 180 0" 
+          animation="property: rotation; to: 0 540 0; loop: true; dur: 4000; easing: linear"
+        ></a-entity>
       </a-marker>
 
+      <!-- Preload assets -->
       <a-assets>
         <a-asset-item id="planeModel" src="Models/iphone.glb"></a-asset-item>
       </a-assets>
 
-      <a-entity
-        camera="fov: 95; near: 0.01; far: 1000"
-        arjs-camera="sourceType: webcam"
-        position="0 0 0">
-      </a-entity>
+      <!-- Camera -->
+      <a-entity camera></a-entity>
     </a-scene>
+
+    <script>
+      // Hide loading once camera is ready
+      document.querySelector('a-scene').addEventListener('loaded', () => {
+        const loading = document.getElementById('loading');
+        if (loading) loading.style.display = 'none';
+      });
+    </script>
   </body>
 </html>
