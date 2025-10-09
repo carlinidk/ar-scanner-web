@@ -33,12 +33,9 @@
       #info.visible { opacity: 1; }
       #info.hidden { opacity: 0; }
 
-      /* Rotate Button */
-      #rotateBtn {
+      /* Buttons */
+      #rotateBtn, #recordBtn {
         position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
         z-index: 999;
         background: rgba(0, 0, 0, 0.7);
         color: white;
@@ -48,12 +45,25 @@
         font-size: 16px;
         cursor: pointer;
       }
+
+      #rotateBtn {
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      #recordBtn {
+        bottom: 70px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
     </style>
   </head>
 
   <body>
     <div id="info" class="visible">Point your camera at the QR Marker 📱</div>
     <button id="rotateBtn">Rotate Model</button>
+    <button id="recordBtn">Start Recording</button>
 
     <a-scene
       embedded
@@ -88,6 +98,7 @@
       const model = document.getElementById('model');
       const info = document.getElementById('info');
       const rotateBtn = document.getElementById('rotateBtn');
+      const recordBtn = document.getElementById('recordBtn');
 
       let isRotating = false;
       let rotationInterval;
@@ -128,6 +139,43 @@
           rotateBtn.textContent = 'Rotate Model';
         }
         isRotating = !isRotating;
+      });
+
+      // --- Recording setup ---
+      let mediaRecorder;
+      let recordedChunks = [];
+      let isRecording = false;
+
+      recordBtn.addEventListener('click', () => {
+        const canvas = document.querySelector('canvas'); // A-Frame renders here
+        if (!isRecording) {
+          const stream = canvas.captureStream(30); // 30 FPS
+          mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) recordedChunks.push(e.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'ar-recording.webm';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            recordedChunks = [];
+          };
+
+          mediaRecorder.start();
+          recordBtn.textContent = 'Stop Recording';
+        } else {
+          mediaRecorder.stop();
+          recordBtn.textContent = 'Start Recording';
+        }
+        isRecording = !isRecording;
       });
     </script>
   </body>
