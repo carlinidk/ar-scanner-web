@@ -1,120 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to WebAR</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: "Poppins", sans-serif;
-    }
+<html>
+  <head>
+    <title>WebAR QR Scanner - QR 1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
-    body {
-      height: 100vh;
-      background: linear-gradient(135deg, #001f3f, #0074D9);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      overflow: hidden;
-      position: relative;
-    }
+    <!-- Updated A-Frame -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 
-    .container {
-      text-align: center;
-      z-index: 10;
-      animation: fadeIn 1.5s ease;
-    }
+    <!-- Updated AR.js (better compatibility) -->
+    <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.3/aframe/build/aframe-ar.min.js"></script>
 
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-      letter-spacing: 1px;
-    }
+    <!-- Enhanced GLTF Loader -->
+    <script src="https://unpkg.com/aframe-gltf-model-plus@3.0.4/dist/aframe-gltf-model-plus.min.js"></script>
 
-    p {
-      font-size: 1.1rem;
-      margin-bottom: 2rem;
-      color: #dfe6e9;
-    }
+    <style>
+      html, body, a-scene {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        background: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <a-scene
+      embedded
+      arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: false;"
+      vr-mode-ui="enabled: false"
+      renderer="logarithmicDepthBuffer: true; antialias: true;"
+      style="width: 100%; height: 100%; margin: 0; padding: 0;"
+    >
+      <!-- Marker for QR1 -->
+      <a-marker type="pattern" url="qr1.patt">
+        <!-- Enhanced glTF model loader -->
+        <a-entity
+          gltf-model-plus="src: #planeModel"
+          scale="0.03 0.03 0.03"
+          position="0 0 0"
+        ></a-entity>
+      </a-marker>
 
-    button {
-      background-color: #00a8ff;
-      border: none;
-      padding: 14px 32px;
-      border-radius: 6px;
-      color: white;
-      font-size: 1.1rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
+      <!-- Assets -->
+      <a-assets>
+        <a-asset-item id="planeModel" src="Models/Seahawk.glb"></a-asset-item>
+      </a-assets>
 
-    button:hover {
-      background-color: #0097e6;
-      transform: scale(1.05);
-    }
+      <!-- Camera -->
+      <a-entity
+        camera="fov: 95; near: 0.01; far: 1000"
+        arjs-camera
+      ></a-entity>
+    </a-scene>
 
-    /* Fade-out transition */
-    .fade-out {
-      opacity: 0;
-      transition: opacity 0.8s ease;
-    }
+    <script>
+      // Basic error catcher
+      window.addEventListener('error', (e) => {
+        console.error('❌ WebAR Error:', e.message);
+      });
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+      // Fallback to regular gltf-model if plus fails
+      AFRAME.registerComponent('model-fallback', {
+        init: function () {
+          const el = this.el;
+          el.addEventListener('model-error', () => {
+            console.warn('⚠️ gltf-model-plus failed, switching to gltf-model...');
+            const src = el.getAttribute('gltf-model-plus');
+            el.removeAttribute('gltf-model-plus');
+            el.setAttribute('gltf-model', src);
+          });
+        },
+      });
 
-    /* Optional animated background */
-    .background-shapes {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      z-index: 1;
-    }
-
-    .circle {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.05);
-      animation: float 8s infinite ease-in-out;
-    }
-
-    .circle:nth-child(1) { width: 200px; height: 200px; top: 10%; left: 15%; animation-delay: 0s; }
-    .circle:nth-child(2) { width: 300px; height: 300px; bottom: 20%; right: 10%; animation-delay: 2s; }
-    .circle:nth-child(3) { width: 150px; height: 150px; top: 60%; left: 70%; animation-delay: 4s; }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-20px); }
-    }
-  </style>
-</head>
-<body>
-  <div class="background-shapes">
-    <div class="circle"></div>
-    <div class="circle"></div>
-    <div class="circle"></div>
-  </div>
-
-  <div class="container">
-    <h1>Carlin's WebAr Experience 🌐</h1>
-    <p>Scan your marker to explore the 3D model in AR!</p>
-    <button id="enterBtn">Enter AR Experience</button>
-  </div>
-
-  <script>
-    const btn = document.getElementById('enterBtn');
-    btn.addEventListener('click', () => {
-      document.body.classList.add('fade-out');
-      setTimeout(() => {
-        window.location.href = 'webar.html';
-      }, 800);
-    });
-  </script>
-</body>
+      document.querySelectorAll('[gltf-model-plus]').forEach((el) => {
+        el.setAttribute('model-fallback', '');
+      });
+    </script>
+  </body>
 </html>
