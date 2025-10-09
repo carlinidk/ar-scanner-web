@@ -1,35 +1,105 @@
-
-
-v2
 <!DOCTYPE html>
 <html>
   <head>
     <title>WebAR QR Scanner - QR 1</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
+    <!-- Core A-Frame -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+
+    <!-- AR.js for Marker Tracking -->
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.min.js"></script>
+
+    <!-- Enhanced GLTF Loader -->
+    <script src="https://unpkg.com/aframe-gltf-model-plus@3.0.4/dist/aframe-gltf-model-plus.min.js"></script>
+
     <style>
       html, body, a-scene {
-        margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        background: #000;
+      }
+
+      /* Optional loading overlay (while camera starts) */
+      #loadingOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: Arial, sans-serif;
+        font-size: 1.2rem;
+        z-index: 9999;
+        transition: opacity 0.6s ease;
+      }
+
+      #loadingOverlay.hidden {
+        opacity: 0;
+        pointer-events: none;
       }
     </style>
   </head>
+
   <body>
-    <a-scene embedded arjs style="width:100%; height:100%; margin:0; padding:0;">
+    <!-- Loading overlay while AR initializes -->
+    <div id="loadingOverlay">🔍 Initializing AR Experience...</div>
+
+    <a-scene embedded arjs="trackingMethod: best;" style="width:100%; height:100%; margin:0; padding:0;">
+      
       <!-- Marker for QR1 -->
       <a-marker type="pattern" url="qr1.patt">
-        <a-entity gltf-model="#planeModel" scale="0.03 0.03 0.03" position="0 0 0"></a-entity>
+        <!-- Enhanced glTF loader -->
+        <a-entity gltf-model-plus="src: #planeModel" 
+                  scale="0.03 0.03 0.03" 
+                  position="0 0 0"
+                  rotation="0 0 0">
+        </a-entity>
       </a-marker>
 
+      <!-- Assets -->
       <a-assets>
         <a-asset-item id="planeModel" src="Models/Seahawk.glb"></a-asset-item>
       </a-assets>
 
-      <a-entity
-        camera="fov: 95; near: 0.01; far: 1000"
-        arjs-camera="sourceType: webcam"
-        position="0 0 0">
+      <!-- AR camera -->
+      <a-entity camera="fov: 95; near: 0.01; far: 1000" 
+                arjs-camera="sourceType: webcam"
+                position="0 0 0">
       </a-entity>
     </a-scene>
+
+    <script>
+      // Fade out loading overlay when scene is ready
+      const overlay = document.getElementById('loadingOverlay');
+      window.addEventListener('load', () => {
+        setTimeout(() => overlay.classList.add('hidden'), 1500);
+      });
+
+      // Fallback: if gltf-model-plus fails, use default gltf-model
+      AFRAME.registerComponent('model-fallback', {
+        init: function () {
+          const el = this.el;
+          el.addEventListener('model-error', () => {
+            console.warn('⚠️ gltf-model-plus failed, switching to default gltf-model...');
+            const src = el.getAttribute('gltf-model-plus');
+            el.removeAttribute('gltf-model-plus');
+            el.setAttribute('gltf-model', src);
+          });
+        }
+      });
+
+      // Attach fallback handler
+      document.querySelectorAll('[gltf-model-plus]').forEach(el => {
+        el.setAttribute('model-fallback', '');
+      });
+    </script>
   </body>
 </html>
