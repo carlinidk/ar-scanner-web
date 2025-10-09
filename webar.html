@@ -1,79 +1,33 @@
+v2
 <!DOCTYPE html>
 <html>
   <head>
     <title>WebAR QR Scanner - QR 1</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-
-    <!-- Modern A-Frame -->
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-
-    <!-- Updated AR.js -->
-    <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.3/aframe/build/aframe-ar.min.js"></script>
-
-    <!-- Enhanced GLTF Loader -->
-    <script src="https://unpkg.com/aframe-gltf-model-plus@3.0.4/dist/aframe-gltf-model-plus.min.js"></script>
-
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.min.js"></script>
     <style>
       html, body, a-scene {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        width: 100%;
-        height: 100%;
-        background: #000;
+        margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%;
       }
     </style>
   </head>
   <body>
-    <a-scene
-      embedded
-      arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: false;"
-      vr-mode-ui="enabled: false"
-      renderer="logarithmicDepthBuffer: true; antialias: true;"
-      style="width: 100%; height: 100%; margin: 0; padding: 0;"
-    >
-      <!-- Marker -->
+    <a-scene embedded arjs style="width:100%; height:100%; margin:0; padding:0;">
+      <!-- Marker for QR1 -->
       <a-marker type="pattern" url="qr1.patt">
-        <!-- We'll inject the correct loader here -->
-        <a-entity id="modelEntity"
-                  scale="0.03 0.03 0.03"
-                  position="0 0 0">
-        </a-entity>
+        <a-entity gltf-model="#planeModel" scale="1 1 1" position="0 0 0"></a-entity>
       </a-marker>
 
-      <!-- Assets -->
       <a-assets>
-        <a-asset-item id="planeModel" src="Models/Seahawk.glb"></a-asset-item>
+        <a-asset-item id="planeModel" src="Models/iphone.glb"></a-asset-item>
       </a-assets>
 
-      <!-- Camera -->
       <a-entity
         camera="fov: 95; near: 0.01; far: 1000"
-        arjs-camera
-      ></a-entity>
+        arjs-camera="sourceType: webcam"
+        position="0 0 0">
+      </a-entity>
     </a-scene>
-
-    <script>
-      // ✅ Auto-detect which loader to use
-      window.addEventListener('DOMContentLoaded', () => {
-        const modelEntity = document.getElementById('modelEntity');
-        const src = '#planeModel';
-
-        // Check if gltf-model-plus is registered and compatible
-        const hasPlus = !!AFRAME.components['gltf-model-plus'];
-        const plusWorks = hasPlus && typeof AFRAME.components['gltf-model-plus'].Component === 'function';
-
-        if (plusWorks) {
-          console.log('✅ Using gltf-model-plus for advanced models.');
-          modelEntity.setAttribute('gltf-model-plus', `src: ${src}`);
-        } else {
-          console.warn('⚠️ gltf-model-plus not supported, falling back to gltf-model.');
-          modelEntity.setAttribute('gltf-model', src);
-        }
-      });
-
-      // Optional error logging
-      window.addEventListener('error', e => console.error('❌ WebAR Error:', e.message));
-    </script>
   </body>
 </html>
