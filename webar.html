@@ -1,4 +1,3 @@
-v2
 <!DOCTYPE html>
 <html>
   <head>
@@ -10,17 +9,31 @@ v2
       html, body, a-scene {
         margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%;
       }
+      #rotateBtn {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 999;
+        padding: 10px 20px;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
     <a-scene embedded arjs style="width:100%; height:100%; margin:0; padding:0;">
       <!-- Marker for QR1 -->
       <a-marker type="pattern" url="qr1.patt">
-        <a-entity gltf-model="#planeModel" scale="0.01 0.01 0.01" position="0 0 0"></a-entity>
+        <a-entity id="model" gltf-model="#planeModel" scale="0.1 0.1 0.1" position="0 0 0"></a-entity>
       </a-marker>
 
       <a-assets>
-        <a-asset-item id="planeModel" src="Models/Seahawk.glb"></a-asset-item>
+        <a-asset-item id="planeModel" src="Models/iphone.glb"></a-asset-item>
       </a-assets>
 
       <a-entity
@@ -29,5 +42,29 @@ v2
         position="0 0 0">
       </a-entity>
     </a-scene>
+
+    <button id="rotateBtn">Rotate Model</button>
+
+    <script>
+      const model = document.getElementById('model');
+      const button = document.getElementById('rotateBtn');
+      let rotating = false;
+      let rotationInterval;
+
+      button.addEventListener('click', () => {
+        if (!rotating) {
+          rotationInterval = setInterval(() => {
+            const rotation = model.getAttribute('rotation');
+            rotation.y += 1;
+            model.setAttribute('rotation', rotation);
+          }, 16); // ~60fps
+          button.textContent = 'Stop Rotation';
+        } else {
+          clearInterval(rotationInterval);
+          button.textContent = 'Rotate Model';
+        }
+        rotating = !rotating;
+      });
+    </script>
   </body>
 </html>
