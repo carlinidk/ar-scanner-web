@@ -9,19 +9,38 @@
       html, body, a-scene {
         margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%;
       }
-      #rotateBtn {
+      #controls {
         position: fixed;
         bottom: 20px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 999;
-        padding: 10px 20px;
+        text-align: center;
         background: rgba(0, 0, 0, 0.6);
-        color: #fff;
+        padding: 10px 20px;
+        border-radius: 8px;
+        color: white;
+        font-family: Arial, sans-serif;
+      }
+      #rotateBtn {
+        display: block;
+        margin-bottom: 8px;
+        padding: 8px 18px;
+        background: #0078ff;
+        color: white;
         border: none;
         border-radius: 5px;
         font-size: 16px;
         cursor: pointer;
+      }
+      #speedSlider {
+        width: 150px;
+        cursor: pointer;
+      }
+      #speedLabel {
+        font-size: 14px;
+        display: block;
+        margin-top: 4px;
       }
     </style>
   </head>
@@ -33,7 +52,7 @@
       </a-marker>
 
       <a-assets>
-        <a-asset-item id="planeModel" src="Models/ImageToStl.com_Cat.glb"></a-asset-item>
+        <a-asset-item id="planeModel" src="Models/Seahawk.glb"></a-asset-item>
       </a-assets>
 
       <a-entity
@@ -43,27 +62,41 @@
       </a-entity>
     </a-scene>
 
-    <button id="rotateBtn">Rotate Model</button>
+    <div id="controls">
+      <button id="rotateBtn">Rotate Model</button>
+      <input type="range" id="speedSlider" min="0.2" max="5" value="1" step="0.1">
+      <span id="speedLabel">Speed: 1x</span>
+    </div>
 
     <script>
       const model = document.getElementById('model');
       const button = document.getElementById('rotateBtn');
+      const speedSlider = document.getElementById('speedSlider');
+      const speedLabel = document.getElementById('speedLabel');
+
       let rotating = false;
       let rotationInterval;
+      let speed = 1;
 
       button.addEventListener('click', () => {
         if (!rotating) {
           rotationInterval = setInterval(() => {
             const rotation = model.getAttribute('rotation');
-            rotation.y += 1;
+            rotation.y += speed; // use adjustable speed
             model.setAttribute('rotation', rotation);
-          }, 16); // ~60fps
+          }, 16);
           button.textContent = 'Stop Rotation';
         } else {
           clearInterval(rotationInterval);
           button.textContent = 'Rotate Model';
         }
         rotating = !rotating;
+      });
+
+      // Update speed dynamically
+      speedSlider.addEventListener('input', () => {
+        speed = parseFloat(speedSlider.value);
+        speedLabel.textContent = `Speed: ${speed.toFixed(1)}x`;
       });
     </script>
   </body>
