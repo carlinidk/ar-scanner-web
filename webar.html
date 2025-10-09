@@ -91,92 +91,106 @@
         position="0 0 0"
       ></a-entity>
     </a-scene>
-    
-    
-    <script>
-      const marker = document.getElementById('marker');
-      const model = document.getElementById('model');
-      const info = document.getElementById('info');
-      const rotateBtn = document.getElementById('rotateBtn');
-      const recordBtn = document.getElementById('recordBtn');
+  <script>
+  const marker = document.getElementById('marker');
+  const model = document.getElementById('model');
+  const info = document.getElementById('info');
+  const rotateBtn = document.getElementById('rotateBtn');
+  const recordBtn = document.getElementById('recordBtn');
 
-      let isRotating = false;
-      let rotationInterval;
+  let isRotating = false;
+  let rotationInterval;
 
-      // Fade in message on load
-      window.addEventListener('load', () => {
-        info.classList.add('visible');
-      });
+  // Fade in message on load
+  window.addEventListener('load', () => {
+    info.classList.add('visible');
+  });
 
-      // Fade out message when marker detected
-      marker.addEventListener('markerFound', () => {
-        info.classList.remove('visible');
-        info.classList.add('hidden');
-      });
+  marker.addEventListener('markerFound', () => {
+    info.classList.remove('visible');
+    info.classList.add('hidden');
+  });
 
-      // Optional: Fade back in if marker lost
-      marker.addEventListener('markerLost', () => {
-        info.classList.remove('hidden');
-        info.classList.add('visible');
-      });
+  marker.addEventListener('markerLost', () => {
+    info.classList.remove('hidden');
+    info.classList.add('visible');
+  });
 
-      // Tap model to spin once
-      model.addEventListener('click', () => {
-        model.emit('spin');
-      });
+  model.addEventListener('click', () => {
+    model.emit('spin');
+  });
 
-      // Button for continuous rotation
-      rotateBtn.addEventListener('click', () => {
-        if (!isRotating) {
-          rotationInterval = setInterval(() => {
-            const rot = model.getAttribute('rotation');
-            rot.y += 1;
-            model.setAttribute('rotation', rot);
-          }, 4);
-          rotateBtn.textContent = 'Stop Rotation';
-        } else {
-          clearInterval(rotationInterval);
-          rotateBtn.textContent = 'Rotate Model';
-        }
-        isRotating = !isRotating;
-      });
+  rotateBtn.addEventListener('click', () => {
+    if (!isRotating) {
+      rotationInterval = setInterval(() => {
+        const rot = model.getAttribute('rotation');
+        rot.y += 1;
+        model.setAttribute('rotation', rot);
+      }, 4);
+      rotateBtn.textContent = 'Stop Rotation';
+    } else {
+      clearInterval(rotationInterval);
+      rotateBtn.textContent = 'Rotate Model';
+    }
+    isRotating = !isRotating;
+  });
 
-      // --- Recording setup ---
-      let mediaRecorder;
-      let recordedChunks = [];
-      let isRecording = false;
+  // --- Recording setup ---
+  let mediaRecorder;
+  let recordedChunks = [];
+  let isRecording = false;
+  let drawInterval;
 
-      recordBtn.addEventListener('click', () => {
-        const canvas = document.querySelector('canvas'); // A-Frame renders here
-        if (!isRecording) {
-          const stream = canvas.captureStream(30); // 30 FPS
-          mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+  recordBtn.addEventListener('click', () => {
+    const sceneCanvas = document.querySelector('canvas'); // A-Frame WebGL canvas
+    const videoEl = document.querySelector('video');      // AR.js camera feed
 
-          mediaRecorder.ondataavailable = (e) => {
-            if (e.data.size > 0) recordedChunks.push(e.data);
-          };
+    if (!isRecording) {
+      // Create an offscreen canvas
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = sceneCanvas.width;
+      offCanvas.height = sceneCanvas.height;
+      const ctx = offCanvas.getContext('2d');
 
-          mediaRecorder.onstop = () => {
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = 'ar-recording.webm';
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            recordedChunks = [];
-          };
+      // Draw both video and WebGL canvas at 60 FPS
+      drawInterval = setInterval(() => {
+        ctx.drawImage(videoEl, 0, 0, offCanvas.width, offCanvas.height); // camera feed
+        ctx.drawImage(sceneCanvas, 0, 0, offCanvas.width, offCanvas.height); // 3D overlay
+      }, 1000 / 60);
 
-          mediaRecorder.start();
-          recordBtn.textContent = 'Stop Recording';
-        } else {
-          mediaRecorder.stop();
-          recordBtn.textContent = 'Start Recording';
-        }
-        isRecording = !isRecording;
-      });
+      // Capture stream from the offscreen canvas
+      const stream = offCanvas.captureStream(60);
+      mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        clearInterval(drawInterval);
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'ar-recording.webm';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        recordedChunks = [];
+      };
+
+      mediaRecorder.start();
+      recordBtn.textContent = 'Stop Recording';
+    } else {
+      mediaRecorder.stop();
+      recordBtn.textContent = 'Start Recording';
+    }
+    isRecording = !isRecording;
+  });
     </script>
+    
+    
+
   </body>
 </html>
