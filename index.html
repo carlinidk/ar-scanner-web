@@ -92,8 +92,33 @@
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-20px); }
     }
+
+    /* Footer with contact info */
+    footer {
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.8);
+      z-index: 10;
+      animation: fadeIn 2s ease;
+    }
+
+    footer a {
+      color: #00a8ff;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    footer a:hover {
+      color: #fff;
+    }
   </style>
 </head>
+
 <body>
   <div class="background-shapes">
     <div class="circle"></div>
@@ -102,10 +127,20 @@
   </div>
 
   <div class="container">
-    <h1>Carlin's WebAR experience 🌐</h1>
+    <h1>Carlin's WebAR Experience 🌐</h1>
     <p>Scan your marker to explore the 3D model in AR!</p>
     <button id="enterBtn">Enter AR Experience</button>
   </div>
+
+  <!-- Footer with your info -->
+  <footer>
+    <p>
+      Follow me on 
+      <a href="https://instagram.com/carlindsouza" target="_blank">@carlindsouza</a>
+      • Email:
+      <a href="mailto:carlindsouza4@gmail.com">carlindsouza4@gmail.com</a>
+    </p>
+  </footer>
 
   <script>
     const btn = document.getElementById('enterBtn');
