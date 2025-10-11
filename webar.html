@@ -13,7 +13,6 @@
         margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%;
       }
 
-      /* Info message */
       #info {
         position: fixed;
         top: 20px;
@@ -33,7 +32,6 @@
       #info.visible { opacity: 1; }
       #info.hidden { opacity: 0; }
 
-      /* Buttons */
       #rotateBtn, #recordBtn, #lockBtn {
         position: fixed;
         z-index: 999;
@@ -46,23 +44,9 @@
         cursor: pointer;
       }
 
-      #rotateBtn {
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-      }
-
-      #recordBtn {
-        bottom: 70px;
-        left: 50%;
-        transform: translateX(-50%);
-      }
-
-      #lockBtn {
-        bottom: 120px;
-        left: 50%;
-        transform: translateX(-50%);
-      }
+      #rotateBtn { bottom: 20px; left: 50%; transform: translateX(-50%); }
+      #recordBtn { bottom: 70px; left: 50%; transform: translateX(-50%); }
+      #lockBtn { bottom: 120px; left: 50%; transform: translateX(-50%); }
     </style>
   </head>
 
@@ -77,7 +61,6 @@
       arjs="sourceType: webcam; debugUIEnabled: false;"
       style="width:100%; height:100%; margin:0; padding:0;"
     >
-      <!-- Marker for QR1 -->
       <a-marker type="pattern" url="Patts/qr1.patt" id="marker" emitevents="true">
         <a-entity
           id="model"
@@ -95,7 +78,6 @@
       <a-entity
         camera="fov: 95; near: 0.01; far: 1000"
         arjs-camera="sourceType: webcam"
-        position="0 0 0"
       ></a-entity>
     </a-scene>
 
@@ -131,11 +113,12 @@
         }
       });
 
+      // Tap to spin
       model.addEventListener('click', () => {
         model.emit('spin');
       });
 
-      // Rotate model button
+      // Rotate toggle
       rotateBtn.addEventListener('click', () => {
         if (!isRotating) {
           rotationInterval = setInterval(() => {
@@ -151,77 +134,38 @@
         isRotating = !isRotating;
       });
 
-      // --- Recording setup ---
-      let mediaRecorder;
-      let recordedChunks = [];
-      let isRecording = false;
-      let drawInterval;
-
-      recordBtn.addEventListener('click', () => {
-        const sceneCanvas = document.querySelector('canvas');
-        const videoEl = document.querySelector('video');
-
-        if (!isRecording) {
-          const offCanvas = document.createElement('canvas');
-          offCanvas.width = sceneCanvas.width;
-          offCanvas.height = sceneCanvas.height;
-          const ctx = offCanvas.getContext('2d');
-
-          drawInterval = setInterval(() => {
-            ctx.drawImage(videoEl, 0, 0, offCanvas.width, offCanvas.height);
-            ctx.drawImage(sceneCanvas, 0, 0, offCanvas.width, offCanvas.height);
-          }, 1000 / 60);
-
-          const stream = offCanvas.captureStream(60);
-          mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-
-          mediaRecorder.ondataavailable = (e) => {
-            if (e.data.size > 0) recordedChunks.push(e.data);
-          };
-
-          mediaRecorder.onstop = () => {
-            clearInterval(drawInterval);
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = 'ar-recording.webm';
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            recordedChunks = [];
-          };
-
-          mediaRecorder.start();
-          recordBtn.textContent = 'Stop Recording';
-        } else {
-          mediaRecorder.stop();
-          recordBtn.textContent = 'Start Recording';
-        }
-        isRecording = !isRecording;
-      });
-
-      // --- Lock button functionality ---
+      // Lock to ground position
       lockBtn.addEventListener('click', () => {
+        const scene = document.querySelector('a-scene');
         if (!isLocked) {
-          // Clone and fix model in place
-          const clone = model.cloneNode(true);
-          const scene = document.querySelector('a-scene');
           const worldPos = new THREE.Vector3();
+          const worldRot = new THREE.Euler();
           model.object3D.getWorldPosition(worldPos);
+          worldRot.copy(model.object3D.rotation);
 
-          clone.setAttribute('position', `${worldPos.x} ${worldPos.y} ${worldPos.z}`);
-          scene.appendChild(clone);
-          lockedClone = clone;
+          lockedClone = document.createElement('a-entity');
+          lockedClone.setAttribute('gltf-model', model.getAttribute('gltf-model'));
+          lockedClone.setAttribute('scale', model.getAttribute('scale'));
+          lockedClone.object3D.position.copy(worldPos);
+          lockedClone.object3D.rotation.copy(worldRot);
 
-          lockBtn.textContent = 'Unlock Model';
+          scene.appendChild(lockedClone);
+          lockedClone.setAttribute('animation__fade', {
+            property: 'scale',
+            to: '0.13 0.13 0.13',
+            dur: 800,
+            easing: 'easeOutElastic'
+          });
+
           isLocked = true;
-          alert('Model locked in place ✅');
+          lockBtn.textContent = 'Unlock Model';
+          alert('Model locked in real-world position ✅');
         } else {
-          if (lockedClone) lockedClone.parentNode.removeChild(lockedClone);
-          lockBtn.textContent = 'Lock Model in Place';
+          if (lockedClone) {
+            lockedClone.parentNode.removeChild(lockedClone);
+          }
           isLocked = false;
+          lockBtn.textContent = 'Lock Model in Place';
           alert('Model unlocked 🔓');
         }
       });
