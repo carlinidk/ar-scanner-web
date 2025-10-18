@@ -34,7 +34,7 @@
       #info.hidden { opacity: 0; }
 
       /* Updated selectors to include the new button */
-      #rotateBtn, #recordBtn, #lockBtn, #playAnimationBtn {
+      #rotateBtn, #lockBtn, #playAnimationBtn {
         position: fixed;
         z-index: 999;
         background: rgba(0, 0, 0, 0.7);
@@ -50,10 +50,9 @@
       }
 
       #rotateBtn { bottom: 20px; }
-      #recordBtn { bottom: 70px; }
       #lockBtn { bottom: 120px; }
       /* 🆕 NEW Button Position */
-      #playAnimationBtn { bottom: 170px; }
+      #playAnimationBtn { bottom: 70px; }
 
 
       /* --- Scale Slider Style --- */
@@ -84,9 +83,8 @@
   <body>
     <div id="info" class="visible">Point your camera at the QR Marker 📱</div>
     <button id="rotateBtn">Rotate Model</button>
-    <button id="recordBtn">Start Recording</button>
     <button id="lockBtn">Lock Model in Place</button>
-    <button id="playAnimationBtn">Play GLB Animation</button>
+  
 
     <input type="range" id="scaleSlider" min="0.01" max="2" step="0.01" value="0.09">
 
@@ -121,11 +119,8 @@
       const model = document.getElementById('model');
       const info = document.getElementById('info');
       const rotateBtn = document.getElementById('rotateBtn');
-      const recordBtn = document.getElementById('recordBtn');
       const lockBtn = document.getElementById('lockBtn');
       const scaleSlider = document.getElementById('scaleSlider');
-      // 🆕 NEW Button Reference
-      const playAnimationBtn = document.getElementById('playAnimationBtn');
 
       let isRotating = false;
       let rotationInterval;
