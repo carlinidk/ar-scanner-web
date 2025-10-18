@@ -32,7 +32,7 @@
       #info.visible { opacity: 1; }
       #info.hidden { opacity: 0; }
 
-      #rotateBtn, #recordBtn, #lockBtn {
+      #rotateBtn, #lockBtn {
         position: fixed;
         z-index: 999;
         background: rgba(0, 0, 0, 0.7);
@@ -45,7 +45,7 @@
       }
 
       #rotateBtn { bottom: 20px; left: 50%; transform: translateX(-50%); }
-      #recordBtn { bottom: 70px; left: 50%; transform: translateX(-50%); }
+      
       #lockBtn { bottom: 120px; left: 50%; transform: translateX(-50%); }
 
       /* --- Scale Slider Style --- */
@@ -76,7 +76,7 @@
   <body>
     <div id="info" class="visible">Point your camera at the QR Marker 📱</div>
     <button id="rotateBtn">Rotate Model</button>
-    <button id="recordBtn">Start Recording</button>
+    
     <button id="lockBtn">Lock Model in Place</button>
 
     <!-- Scale Slider -->
@@ -112,7 +112,7 @@
       const model = document.getElementById('model');
       const info = document.getElementById('info');
       const rotateBtn = document.getElementById('rotateBtn');
-      const recordBtn = document.getElementById('recordBtn');
+      
       const lockBtn = document.getElementById('lockBtn');
       const scaleSlider = document.getElementById('scaleSlider');
 
