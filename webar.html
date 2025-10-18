@@ -47,6 +47,29 @@
       #rotateBtn { bottom: 20px; left: 50%; transform: translateX(-50%); }
       #recordBtn { bottom: 70px; left: 50%; transform: translateX(-50%); }
       #lockBtn { bottom: 120px; left: 50%; transform: translateX(-50%); }
+
+      /* --- Scale Slider Style --- */
+      #scaleSlider {
+        position: fixed;
+        bottom: 170px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 999;
+        width: 200px;
+        -webkit-appearance: none;
+        height: 8px;
+        background: #444;
+        border-radius: 5px;
+        outline: none;
+      }
+      #scaleSlider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        background: white;
+        border-radius: 50%;
+        cursor: pointer;
+      }
     </style>
   </head>
 
@@ -55,6 +78,9 @@
     <button id="rotateBtn">Rotate Model</button>
     <button id="recordBtn">Start Recording</button>
     <button id="lockBtn">Lock Model in Place</button>
+
+    <!-- Scale Slider -->
+    <input type="range" id="scaleSlider" min="0.01" max="2" step="0.01" value="0.09">
 
     <a-scene
       embedded
@@ -88,13 +114,13 @@
       const rotateBtn = document.getElementById('rotateBtn');
       const recordBtn = document.getElementById('recordBtn');
       const lockBtn = document.getElementById('lockBtn');
+      const scaleSlider = document.getElementById('scaleSlider');
 
       let isRotating = false;
       let rotationInterval;
       let isLocked = false;
       let lockedClone = null;
 
-      // Fade in message on load
       window.addEventListener('load', () => {
         info.classList.add('visible');
       });
@@ -113,12 +139,10 @@
         }
       });
 
-      // Tap to spin
       model.addEventListener('click', () => {
         model.emit('spin');
       });
 
-      // Rotate toggle
       rotateBtn.addEventListener('click', () => {
         if (!isRotating) {
           rotationInterval = setInterval(() => {
@@ -134,7 +158,11 @@
         isRotating = !isRotating;
       });
 
-      // Lock to ground position
+      scaleSlider.addEventListener('input', () => {
+        const scaleValue = scaleSlider.value;
+        model.setAttribute('scale', `${scaleValue} ${scaleValue} ${scaleValue}`);
+      });
+
       lockBtn.addEventListener('click', () => {
         const scene = document.querySelector('a-scene');
         if (!isLocked) {
