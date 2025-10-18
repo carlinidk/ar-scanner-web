@@ -8,6 +8,7 @@
     />
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v7.0.0/dist/aframe-extras.min.js"></script>
     <style>
       html, body, a-scene {
         margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%;
@@ -32,7 +33,8 @@
       #info.visible { opacity: 1; }
       #info.hidden { opacity: 0; }
 
-      #rotateBtn, #lockBtn {
+      /* Updated selectors to include the new button */
+      #rotateBtn, #recordBtn, #lockBtn, #playAnimationBtn {
         position: fixed;
         z-index: 999;
         background: rgba(0, 0, 0, 0.7);
@@ -42,16 +44,22 @@
         border-radius: 5px;
         font-size: 16px;
         cursor: pointer;
+        /* Aligning buttons vertically */
+        left: 50%;
+        transform: translateX(-50%);
       }
 
-      #rotateBtn { bottom: 20px; left: 50%; transform: translateX(-50%); }
-      
-      #lockBtn { bottom: 120px; left: 50%; transform: translateX(-50%); }
+      #rotateBtn { bottom: 20px; }
+      #recordBtn { bottom: 70px; }
+      #lockBtn { bottom: 120px; }
+      /* 🆕 NEW Button Position */
+      #playAnimationBtn { bottom: 170px; }
+
 
       /* --- Scale Slider Style --- */
       #scaleSlider {
         position: fixed;
-        bottom: 170px;
+        bottom: 220px; /* Moved down to accommodate new button */
         left: 50%;
         transform: translateX(-50%);
         z-index: 999;
@@ -76,10 +84,10 @@
   <body>
     <div id="info" class="visible">Point your camera at the QR Marker 📱</div>
     <button id="rotateBtn">Rotate Model</button>
-    
+    <button id="recordBtn">Start Recording</button>
     <button id="lockBtn">Lock Model in Place</button>
+    <button id="playAnimationBtn">Play GLB Animation</button>
 
-    <!-- Scale Slider -->
     <input type="range" id="scaleSlider" min="0.01" max="2" step="0.01" value="0.09">
 
     <a-scene
@@ -94,11 +102,12 @@
           scale="0.09 0.09 0.09"
           position="0 0 0"
           animation__spin="property: rotation; to: 0 360 0; dur: 2000; startEvents: spin; easing: linear;"
+          animation-mixer="clip: *; loop: once; crossFadeDuration: 0;" /* ⚠️ ADDED: animation-mixer */
         ></a-entity>
       </a-marker>
 
       <a-assets>
-        <a-asset-item id="planeModel" src="Models/survival_ar_headset.glb"</a-asset-item>
+        <a-asset-item id="planeModel" src="Models/insanity_in_motion.glb"></a-asset-item>
       </a-assets>
 
       <a-entity
@@ -112,9 +121,11 @@
       const model = document.getElementById('model');
       const info = document.getElementById('info');
       const rotateBtn = document.getElementById('rotateBtn');
-      
+      const recordBtn = document.getElementById('recordBtn');
       const lockBtn = document.getElementById('lockBtn');
       const scaleSlider = document.getElementById('scaleSlider');
+      // 🆕 NEW Button Reference
+      const playAnimationBtn = document.getElementById('playAnimationBtn');
 
       let isRotating = false;
       let rotationInterval;
@@ -196,6 +207,23 @@
           lockBtn.textContent = 'Lock Model in Place';
           alert('Model unlocked 🔓');
         }
+      });
+
+      // 🆕 NEW Animation Button Handler
+      playAnimationBtn.addEventListener('click', () => {
+        // Use the animation-mixer component to play the clip.
+        // The default action is to set it to 'loop: once' and play.
+        // It will automatically start playing the first (or only) animation clip.
+        model.setAttribute('animation-mixer', {
+          clip: '*', // Use '*' to match any animation clip in the GLB
+          loop: 'once',
+          timeScale: 1.0, // Ensures it plays at normal speed
+          // The component automatically starts the animation when these attributes are set.
+        });
+
+        // Optional: Re-add the listener to play it again when it finishes (if needed)
+        // or change the button text
+        alert('Playing GLB animation! 🎬');
       });
     </script>
   </body>
