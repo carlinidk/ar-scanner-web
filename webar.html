@@ -47,27 +47,58 @@
       }
       #info.visible { opacity: 1; }
       #info.hidden { opacity: 0; }
+      #info.hidden-ui { display: none; }
 
-      /* --- NEW: Double Tap Hint Style --- */
-      #doubleTapHint {
+      /* --- NEW: Easter Egg Text/Confetti Container Style --- */
+      #easterEggContainer {
           position: fixed;
-          top: 80px; /* Positioned below the main info box */
-          left: 50%;
-          transform: translateX(-50%);
-          background: rgba(0, 0, 0, 0.6);
-          color: white;
-          padding: 8px 15px;
-          border-radius: 4px;
-          font-size: 14px;
-          z-index: 998;
-          opacity: 0;
-          pointer-events: none; /* Allows clicks to pass through */
-          transition: opacity 0.5s ease;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          display: none; /* Initially hidden */
+          justify-content: center;
+          align-items: center;
+          z-index: 1000; 
+          background: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+          cursor: pointer; /* To indicate it can be tapped to close */
       }
-      #doubleTapHint.visible { opacity: 1; }
-      #doubleTapHint.hidden { opacity: 0; }
-      #doubleTapHint.hidden-ui { display: none; } /* Used by the general show/hide logic */
+      #easterEggText {
+          /* Styling for the text box */
+          background: linear-gradient(45deg, #ff6b6b, #ee5253); /* Gradient background */
+          color: white;
+          padding: 40px 60px;
+          border-radius: 15px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+          font-size: 40px;
+          font-weight: bold;
+          text-align: center;
+          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+          transform: scale(0); /* Start hidden/small for pop effect */
+          animation: popIn 0.3s forwards;
+      }
+      @keyframes popIn {
+          to { transform: scale(1); }
+      }
+      
+      /* --- Confetti Styling (Simple CSS approach) --- */
+      .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: #f0f;
+        opacity: 0;
+        animation: confetti-fall 2s ease-out forwards;
+      }
 
+      @keyframes confetti-fall {
+        0% { transform: translate(var(--x-start, 0), var(--y-start, 0)) rotate(0deg); opacity: 1; }
+        100% { transform: translate(var(--x-end, 0), var(--y-end, 800px)) rotate(720deg); opacity: 0; }
+      }
+
+      /* --- Double Tap Hint (Kept the styling but removing the show/hide logic) --- */
+      #doubleTapHint { display: none; } 
+      
 
       /* --- Bottom UI Container --- */
       .ui-container {
@@ -230,9 +261,12 @@
   <body>
     <div id="info" class="visible">Point your camera at the QR Marker 📱</div>
     
-    <div id="doubleTapHint">
-        *DOUBLE TAP* anywhere to bring the UI back!
+    <div id="doubleTapHint"></div> 
+    
+    <div id="easterEggContainer">
+        <div id="easterEggText">I love my GF ❤️</div>
     </div>
+
 
     <div class="ui-container" id="uiContainer">
       <div class="scale-control-row">
@@ -277,11 +311,12 @@
     </a-scene>
 
     <script>
-      // --- Constants for Default Values ---
+      // --- Constants for Tap Logic ---
       const DEFAULT_SCALE_VALUE = 0.09;
+      const EASTER_EGG_TAPS = 3; // The new required tap count
+      const TAP_RESET_DELAY = 800; // ms: Max time between taps
 
       // --- Element Selectors ---
-      const scene = document.querySelector('a-scene'); 
       const marker = document.getElementById('marker');
       const model = document.getElementById('model');
       const info = document.getElementById('info');
@@ -291,48 +326,69 @@
       const resetBtn = document.getElementById('resetBtn'); 
       const uiContainer = document.getElementById('uiContainer');
       const hideUiBtn = document.getElementById('hideUiBtn');
-      // ✅ NEW: Double Tap Hint Selector
-      const doubleTapHint = document.getElementById('doubleTapHint');
+      const easterEggContainer = document.getElementById('easterEggContainer');
+
 
       // --- State Variables ---
       let isRotating = false;
       let rotationInterval;
-      let lastTap = 0;
-      const DOUBLE_TAP_DELAY = 300; // ms
-      // ✅ NEW: Timer variable for the hint
-      let hintTimeout;
+      
+      // Tap Logic State
+      let tapCount = 0;
+      let tapTimeout;
+      
+      // Function to generate confetti effect
+      function generateConfetti() {
+          const confettiColors = ['#ff00ff', '#00ffff', '#ffff00', '#ff8800', '#00ff00'];
+          const numConfetti = 50;
+          
+          for (let i = 0; i < numConfetti; i++) {
+              const confetti = document.createElement('div');
+              confetti.className = 'confetti';
+              
+              // Random positioning (starting from center-top of screen)
+              const startX = Math.random() * window.innerWidth - window.innerWidth / 2;
+              const startY = -Math.random() * 50; 
+              
+              // Random end point (falling effect)
+              const endX = startX + (Math.random() - 0.5) * 500;
+              const endY = window.innerHeight;
+
+              // Apply random color and size
+              confetti.style.backgroundColor = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+              confetti.style.width = `${Math.random() * 8 + 4}px`;
+              confetti.style.height = confetti.style.width;
+              
+              // Set CSS variables for animation
+              confetti.style.setProperty('--x-start', `${startX}px`);
+              confetti.style.setProperty('--y-start', `${startY}px`);
+              confetti.style.setProperty('--x-end', `${endX}px`);
+              confetti.style.setProperty('--y-end', `${endY}px`);
+              confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+              confetti.style.left = `${window.innerWidth / 2}px`;
+              confetti.style.top = `${window.innerHeight / 2}px`;
+              
+              document.body.appendChild(confetti);
+
+              // Clean up confetti element after animation finishes
+              confetti.addEventListener('animationend', () => {
+                  confetti.remove();
+              });
+          }
+      }
 
 
       // --- UI Control Functions ---
-
+      // Keeping these minimal as the request simplifies the tap conflicts
       const hideUI = () => {
           uiContainer.classList.add('hidden-ui');
           info.classList.add('hidden-ui');
-          
-          // 1. Show the hint immediately
-          doubleTapHint.classList.remove('hidden');
-          doubleTapHint.classList.add('visible');
-          
-          // 2. Clear any existing timeout (safety)
-          clearTimeout(hintTimeout);
-          
-          // 3. Set a new timeout to hide the hint after 5 seconds (5000ms)
-          hintTimeout = setTimeout(() => {
-              doubleTapHint.classList.remove('visible');
-              doubleTapHint.classList.add('hidden');
-          }, 5000); 
       };
 
       const showUI = () => {
           uiContainer.classList.remove('hidden-ui');
           info.classList.remove('hidden-ui');
           
-          // Clear and hide the hint immediately when the UI is brought back
-          clearTimeout(hintTimeout);
-          doubleTapHint.classList.remove('visible');
-          doubleTapHint.classList.add('hidden');
-          
-          // Re-show the standard info visibility based on marker state
           if (marker.getAttribute('visible')) {
               info.classList.remove('visible');
               info.classList.add('hidden');
@@ -340,6 +396,34 @@
               info.classList.remove('hidden');
               info.classList.add('visible');
           }
+      };
+      
+      // Function to display the Easter Egg Text
+      const showEasterEgg = () => {
+          // Hide all normal UI elements
+          hideUI();
+          
+          // Generate confetti
+          generateConfetti();
+
+          // Reset the tap counter for the next state (exit)
+          tapCount = 0; 
+          clearTimeout(tapTimeout);
+          
+          // Display the text container
+          easterEggContainer.style.display = 'flex';
+      };
+
+      // Function to hide the Easter Egg Text
+      const hideEasterEgg = () => {
+          easterEggContainer.style.display = 'none';
+          
+          // Reset tap counter
+          tapCount = 0;
+          clearTimeout(tapTimeout);
+
+          // Restore normal UI visibility
+          showUI(); 
       };
 
 
@@ -366,7 +450,6 @@
 
 
       // --- UI Interaction Event Listeners ---
-
       model.addEventListener('click', () => {
         model.emit('spin');
       });
@@ -410,21 +493,30 @@
       });
       
       hideUiBtn.addEventListener('click', hideUI);
+      
+      // Tap listener to exit the easter egg popup
+      easterEggContainer.addEventListener('click', hideEasterEgg);
 
 
-      // Double-Tap/Double-Click Logic to Show UI
+      // --- PRIMARY 3-TAP EASTER EGG LOGIC ---
       document.body.addEventListener('click', (event) => {
-          // Check if the UI is hidden AND the click target is not on the hidden UI itself
-          if (uiContainer.classList.contains('hidden-ui') && !event.target.closest('.ui-container')) {
-              const currentTime = new Date().getTime();
-              const tapLength = currentTime - lastTap;
-              
-              if (tapLength < DOUBLE_TAP_DELAY && tapLength > 0) {
-                  showUI();
-                  lastTap = 0; 
-              } else {
-                  lastTap = currentTime;
-              }
+          // 1. IGNORE clicks if the easter egg is showing OR if the click is on an active UI button/slider
+          if (easterEggContainer.style.display === 'flex' || event.target.closest('.ui-container')) {
+              return;
+          }
+          
+          // Reset tap counter if the time between taps is too long
+          clearTimeout(tapTimeout);
+          
+          tapCount++;
+          
+          if (tapCount >= EASTER_EGG_TAPS) {
+              showEasterEgg();
+          } else {
+              // Set timeout to reset tapCount if no subsequent tap occurs in time
+              tapTimeout = setTimeout(() => {
+                  tapCount = 0;
+              }, TAP_RESET_DELAY);
           }
       });
     </script>
