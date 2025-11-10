@@ -8,262 +8,153 @@
   <script src="https://cdn.tailwindcss.com"></script>
   
   <style>
-    /* Custom CSS for the fixed background and custom animation */
     body {
-      /* Use a dark, dynamic gradient */
       background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
       font-family: 'Inter', sans-serif;
       height: 100vh;
       overflow: hidden;
     }
 
-    /* Keyframe for subtle floating effect on background elements */
     @keyframes float {
       0% { transform: translate(0, 0) rotate(0deg); }
       50% { transform: translate(-20px, 30px) rotate(5deg); }
       100% { transform: translate(0, 0) rotate(0deg); }
     }
 
-    .shape {
-      position: absolute;
-      background: rgba(129, 140, 248, 0.1); /* Indigo 300 with transparency */
-      border-radius: 50%;
-      filter: blur(80px); /* Heavy blur for a glow effect */
-      animation: float 15s infinite ease-in-out;
-      z-index: 0;
-    }
-    
-    .shape-1 { width: 300px; height: 300px; top: 10%; left: 10%; animation-delay: 0s; }
+    .shape { position: absolute; background: rgba(129,140,248,0.1); border-radius: 50%; filter: blur(80px); animation: float 15s infinite ease-in-out; z-index: 0; }
+    .shape-1 { width: 300px; height: 300px; top: 10%; left: 10%; }
     .shape-2 { width: 400px; height: 400px; bottom: 5%; right: 5%; animation-delay: -5s; }
     .shape-3 { width: 200px; height: 200px; top: 50%; right: 70%; animation-delay: -10s; }
-    
-    /* Fade-out transition for the body */
-    .fade-out {
-      opacity: 0;
-      transition: opacity 0.8s ease;
-    }
-    
-    /* Fade-in for the main container */
-    .fade-in {
-        animation: fadeIn 1.5s ease forwards;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
 
-    /* --- Custom AR Ring Loader styles --- */
+    .fade-out { opacity: 0; transition: opacity 0.8s ease; }
+    .fade-in { animation: fadeIn 1.5s ease forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
     @keyframes loader {
-      /* Adjusted to use a more dramatic 3D rotation and scale */
       from {transform: translate(-50%, -50%) scale(1) rotateY(0deg) rotateX(0deg) rotateZ(0deg)}
       to {transform: translate(-50%, -50%) scale(1.7) rotateY(180deg) rotateX(180deg) rotateZ(180deg)} 
     }
 
-    .ar-ring-container {
-      position: relative;
-      /* Define a fixed size container for the animated elements */
-      width: 4rem; 
-      height: 4rem;
-      margin: 0 auto; 
-    }
-    
-    .ring {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      /* Centering the ring itself (critical for the animation origin) */
-      transform: translate(-50%, -50%); 
-      width: 3.5rem;
-      height: 3.5rem;
-      border: 4px solid #818cf8; /* Indigo 300 */
-      border-radius: 50%;
-      animation: loader 1.5s infinite;
-      animation-timing-function: cubic-bezier(1,0,0,1);
-      animation-direction: alternate;
-      /* Matching glow effect with the indigo theme */
-      box-shadow:
-        0 0 3px rgba(129, 140, 248, 0.4) inset,
-        0 0 8px #a5b4fc, 
-        0 0 10px #818cf8; 
-    }
-    
-    /* Animation delays for cascading effect */
-    .ring-2 {
-      animation-delay: 250ms;
-      border: 4px solid #a5b4fc; 
-    }
-    .ring-3 {
-      animation-delay: 500ms;
-      border: 4px solid #c7d2fe; 
-    }
-    .ring-4 {
-      animation-delay: 750ms;
-      border: 4px solid #e0e7ff; 
-    }
+    .ar-ring-container { position: relative; width: 4rem; height: 4rem; margin: 0 auto; }
+    .ring { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 3.5rem; height: 3.5rem; border: 4px solid #818cf8; border-radius: 50%; animation: loader 1.5s infinite alternate cubic-bezier(1,0,0,1); box-shadow: 0 0 3px rgba(129,140,248,0.4) inset, 0 0 8px #a5b4fc, 0 0 10px #818cf8; }
+    .ring-2 { animation-delay: 250ms; border-color: #a5b4fc; }
+    .ring-3 { animation-delay: 500ms; border-color: #c7d2fe; }
+    .ring-4 { animation-delay: 750ms; border-color: #e0e7ff; }
 
-    /* --- Pop-up Modal Styles (NEW) --- */
-    #adModal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      z-index: 50; /* Above all content */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s ease, visibility 0.3s ease;
-    }
-    #adModal.visible {
-      opacity: 1;
-      visibility: visible;
-    }
-    #adContent {
-      position: relative;
-      /* Max width for desktop, full width on mobile */
-      max-width: 340px; 
-      transform: scale(0.95);
-      transition: transform 0.3s ease;
-    }
-    #adModal.visible #adContent {
-      transform: scale(1);
-    }
+    /* AD Modal */
+    #adModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 50; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+    #adModal.visible { opacity: 1; visibility: visible; }
+    #adContent { position: relative; max-width: 340px; transform: scale(0.95); transition: transform 0.3s ease; }
+    #adModal.visible #adContent { transform: scale(1); }
+
+    /* Future Updates Animation */
+    .expand { max-height: 500px; opacity: 1; transition: max-height 0.6s ease, opacity 0.6s ease; }
+    .collapse { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.5s ease, opacity 0.5s ease; }
   </style>
 </head>
 
 <body class="h-screen flex items-center justify-center fade-in">
   
+  <!-- AD MODAL -->
   <div id="adModal">
       <div id="adContent" class="bg-gray-800 rounded-lg shadow-2xl p-4 text-center">
-          
           <button id="closeAdBtn" class="absolute top-2 right-2 text-gray-400 hover:text-white transition z-51" aria-label="Close Advertisement">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
-          
           <h3 class="text-xl font-bold text-white mb-3">ADS GO HERE!!!1</h3>
-
           <a href="https://amzn.to/47LJWd5" target="_blank" id="adCtaLink">
-              <img src="ad.jpg" alt="Featured Product Ad" class="w-[300px] h-[250px] mx-auto rounded-lg object-cover border-2 border-indigo-500/50" width="300" height="250">
+              <img src="ad.jpg" alt="Featured Product Ad" class="w-[300px] h-[250px] mx-auto rounded-lg object-cover border-2 border-indigo-500/50">
           </a>
-          
-          <p class="text-sm text-gray-400 mt-3 mb-4">
-              Click the image or button below to view the AD/PRODUCT !!.
-          </p>
-
-          <a href="https://amzn.to/47LJWd5" target="_blank" 
-             class="block w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg transition duration-300 shadow-lg shadow-indigo-600/50">
-              View Ad/Product
-          </a>
-          <p class="text-xs text-gray-500 mt-2">
-            Contact me to run your ads here!!
-          </p>
-          
+          <p class="text-sm text-gray-400 mt-3 mb-4">Click the image or button below to view the AD/PRODUCT !!.</p>
+          <a href="https://amzn.to/47LJWd5" target="_blank" class="block w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg transition duration-300 shadow-lg shadow-indigo-600/50">View Ad/Product</a>
+          <p class="text-xs text-gray-500 mt-2">Contact me to run your ads here!!</p>
       </div>
   </div>
+
   <div class="shape shape-1"></div>
   <div class="shape shape-2"></div>
   <div class="shape shape-3"></div>
 
-  <div class="container text-center z-10 p-8 md:p-12 
-              bg-gray-900/80 backdrop-blur-sm 
-              rounded-2xl shadow-2xl max-w-xl w-11/12 
-              transform transition duration-500 hover:shadow-indigo-500/50">
+  <!-- MAIN CONTAINER -->
+  <div class="container text-center z-10 p-8 md:p-12 bg-gray-900/80 backdrop-blur-sm rounded-2xl shadow-2xl max-w-xl w-11/12 transform transition duration-500 hover:shadow-indigo-500/50">
     
     <div class="space-y-4">
-        
         <div class="ar-ring-container mb-6">
-            <div class="ring"></div>
-            <div class="ring ring-2"></div>
-            <div class="ring ring-3"></div>
-            <div class="ring ring-4"></div>
+            <div class="ring"></div><div class="ring ring-2"></div><div class="ring ring-3"></div><div class="ring ring-4"></div>
         </div>
         
         <h1 class="text-4xl font-extrabold text-white tracking-tight sm:text-5xl">
           Carlin's <span class="text-indigo-400">WebAR</span> Gateway
         </h1>
         
-        <p class="text-lg text-gray-300 pt-2">
-          Step into a new reality. Scan your marker and explore the future of augmented digital models.
-        </p>
+        <p class="text-lg text-gray-300 pt-2">Step into a new reality. Scan your marker and explore the future of augmented digital models.</p>
     </div>
     
-    <button id="enterBtn" 
-            class="mt-8 w-full sm:w-auto 
-                   bg-indigo-600 hover:bg-indigo-500 
-                   text-white font-bold text-xl 
-                   py-3 px-10 rounded-xl transition duration-300 
-                   shadow-lg shadow-indigo-600/50 
-                   focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50">
+    <button id="enterBtn" class="mt-8 w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xl py-3 px-10 rounded-xl transition duration-300 shadow-lg shadow-indigo-600/50 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50">
       Launch AR Experience
     </button>
-    
+
+    <!-- NEW FUTURE UPDATES BUTTON -->
+    <button id="futureBtn" class="mt-4 w-full sm:w-auto bg-indigo-500/60 hover:bg-indigo-400/80 text-white font-semibold py-2 px-8 rounded-lg transition duration-300 shadow-md shadow-indigo-600/30 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+      View Future Updates
+    </button>
+
+    <!-- FUTURE UPDATES SECTION -->
+    <div id="futureText" class="collapse mt-4 text-gray-300 text-sm text-left bg-gray-800/60 rounded-lg p-4 border border-indigo-400/30">
+      <p class="mb-2"><span class="font-semibold text-indigo-300">Planned Features:</span></p>
+      <ul class="list-disc list-inside space-y-1">
+        <li>2 or more models in 1 view(multipe qr/patts).</li>
+        <li>Custom AR environment themes.</li>
+        <li>Real-time lighting and shadow enhancements.</li>
+        <li>Offline model caching and faster load times.</li>
+        <li>Multi-user AR collaboration (beta).</li>
+      </ul>
+    </div>
+
     <footer class="mt-8 text-sm text-gray-400">
       Connect: 
       <a href="https://instagram.com/carlindsouza" target="_blank" class="text-indigo-300 hover:text-indigo-200 transition">@carlindsouza</a>
       <span class="mx-2">•</span>
       <a href="mailto:carlindsouza4@gmail.com" class="text-indigo-300 hover:text-indigo-200 transition">carlindsouza4@gmail.com</a>
     </footer>
-    
   </div>
 
   <script>
-    // --- AD MODAL FUNCTIONALITY (ALWAYS SHOW) ---
-    const AD_TIMEOUT_MS = 2500; // Pop-up delay (2.5 seconds)
     const MODAL = document.getElementById('adModal');
     const CLOSE_BTN = document.getElementById('closeAdBtn');
-    const CTA_LINK = document.getElementById('adCtaLink'); 
-    
-    // Get the main button
+    const CTA_LINK = document.getElementById('adCtaLink');
     const btn = document.getElementById('enterBtn');
 
     function showAd() {
-        // Show the ad every time after the delay
-        setTimeout(() => {
-            // Only show the ad if the user hasn't already clicked the Launch button
-            if (!document.body.classList.contains('fade-out')) {
-                MODAL.classList.add('visible');
-            }
-        }, AD_TIMEOUT_MS);
-    }
-
-    function hideAd() {
-        // Just hide the ad without saving anything to local storage
-        MODAL.classList.remove('visible');
-    }
-    
-    // Attach close behavior
-    CLOSE_BTN.addEventListener('click', hideAd);
-    CTA_LINK.addEventListener('click', hideAd); 
-    
-    // Hide if backdrop is clicked
-    MODAL.addEventListener('click', (e) => {
-        if (e.target === MODAL) {
-            hideAd();
+      setTimeout(() => {
+        if (!document.body.classList.contains('fade-out')) {
+          MODAL.classList.add('visible');
         }
+      }, 2500);
+    }
+    function hideAd() { MODAL.classList.remove('visible'); }
+
+    CLOSE_BTN.addEventListener('click', hideAd);
+    CTA_LINK.addEventListener('click', hideAd);
+    MODAL.addEventListener('click', e => { if (e.target === MODAL) hideAd(); });
+    showAd();
+
+    btn.addEventListener('click', () => {
+      hideAd();
+      document.body.classList.add('fade-out');
+      document.body.classList.remove('fade-in');
+      setTimeout(() => { window.location.href = 'webar.html'; }, 800);
     });
 
-    // Run the ad function on page load
-    showAd(); 
+    // --- FUTURE UPDATES TOGGLE LOGIC ---
+    const futureBtn = document.getElementById('futureBtn');
+    const futureText = document.getElementById('futureText');
 
-    // --- BUTTON AND REDIRECTION LOGIC (FIXED) ---
-    btn.addEventListener('click', () => {
-      // 1. FIX: Hide the ad modal immediately to remove any visual/z-index conflict
-      hideAd(); 
-        
-      // 2. Use the body class to trigger the fade-out
-      document.body.classList.add('fade-out');
-      
-      // 3. Remove the fade-in class so it doesn't conflict with fade-out
-      document.body.classList.remove('fade-in'); 
-
-      // 4. Wait for the fade-out transition to complete (0.8s) before redirecting
-      setTimeout(() => {
-        window.location.href = 'webar.html';
-      }, 800);
+    futureBtn.addEventListener('click', () => {
+      const expanded = futureText.classList.contains('expand');
+      futureText.classList.toggle('expand', !expanded);
+      futureText.classList.toggle('collapse', expanded);
+      futureBtn.textContent = expanded ? 'View Future Updates' : 'Hide Future Updates';
     });
   </script>
 </body>
