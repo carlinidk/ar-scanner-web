@@ -41,24 +41,45 @@
     .ring-3 { animation-delay: 500ms; border-color: #c7d2fe; }
     .ring-4 { animation-delay: 750ms; border-color: #e0e7ff; }
 
-    /* AD Modal */
-    #adModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 50; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
-    #adModal.visible { opacity: 1; visibility: visible; }
-    #adContent { position: relative; max-width: 340px; transform: scale(0.95); transition: transform 0.3s ease; }
-    #adModal.visible #adContent { transform: scale(1); }
-
-    /* Future Updates Animation */
-    .expand { max-height: 500px; opacity: 1; transition: max-height 0.6s ease, opacity 0.6s ease; }
-    .collapse { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.5s ease, opacity 0.5s ease; }
+    /* --- General Modal Base --- */
+    .modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      z-index: 50;
+    }
+    .modal.visible {
+      opacity: 1; visibility: visible;
+    }
+    .modal-content {
+      position: relative;
+      background: rgba(31,41,55,0.95);
+      border: 1px solid rgba(99,102,241,0.4);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      max-width: 360px;
+      max-height: 85vh;
+      overflow-y: auto;
+      transform: scale(0.95);
+      transition: transform 0.3s ease;
+      box-shadow: 0 0 30px rgba(99,102,241,0.3);
+    }
+    .modal.visible .modal-content {
+      transform: scale(1);
+    }
   </style>
 </head>
 
 <body class="h-screen flex items-center justify-center fade-in">
   
   <!-- AD MODAL -->
-  <div id="adModal">
-      <div id="adContent" class="bg-gray-800 rounded-lg shadow-2xl p-4 text-center">
-          <button id="closeAdBtn" class="absolute top-2 right-2 text-gray-400 hover:text-white transition z-51" aria-label="Close Advertisement">
+  <div id="adModal" class="modal">
+      <div id="adContent" class="modal-content text-center">
+          <button id="closeAdBtn" class="absolute top-2 right-2 text-gray-400 hover:text-white transition" aria-label="Close Advertisement">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
           <h3 class="text-xl font-bold text-white mb-3">ADS GO HERE!!!1</h3>
@@ -71,6 +92,28 @@
       </div>
   </div>
 
+  <!-- FUTURE UPDATES MODAL -->
+  <div id="futureModal" class="modal">
+    <div id="futureContent" class="modal-content text-left">
+      <button id="closeFutureBtn" class="absolute top-2 right-2 text-gray-400 hover:text-white transition" aria-label="Close Updates">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+      <h3 class="text-2xl font-bold text-indigo-300 mb-3 text-center">🚀 Future Updates</h3>
+      <p class="text-gray-300 text-sm mb-2">Exciting new features are in the works:</p>
+      <ul class="list-disc list-inside text-gray-200 text-sm space-y-1">
+        <li>Multi-models (2 or more models in 1 view).</li>
+        <li>Custom AR environment themes and lighting presets.</li>
+        <li>Offline model caching for faster performance.</li>
+        <li>Multi-user shared AR experiences (beta).</li>
+        <li>Creator dashboard for uploading your own AR scenes.</li>
+      </ul>
+      <div class="mt-4 text-center">
+        <button id="closeFutureBtn2" class="mt-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 px-6 rounded-lg shadow-md shadow-indigo-500/40 transition">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BACKGROUND SHAPES -->
   <div class="shape shape-1"></div>
   <div class="shape shape-2"></div>
   <div class="shape shape-3"></div>
@@ -94,22 +137,10 @@
       Launch AR Experience
     </button>
 
-    <!-- NEW FUTURE UPDATES BUTTON -->
+    <!-- New Button -->
     <button id="futureBtn" class="mt-4 w-full sm:w-auto bg-indigo-500/60 hover:bg-indigo-400/80 text-white font-semibold py-2 px-8 rounded-lg transition duration-300 shadow-md shadow-indigo-600/30 focus:outline-none focus:ring-2 focus:ring-indigo-400">
       View Future Updates
     </button>
-
-    <!-- FUTURE UPDATES SECTION -->
-    <div id="futureText" class="collapse mt-4 text-gray-300 text-sm text-left bg-gray-800/60 rounded-lg p-4 border border-indigo-400/30">
-      <p class="mb-2"><span class="font-semibold text-indigo-300">Planned Features:</span></p>
-      <ul class="list-disc list-inside space-y-1">
-        <li>2 or more models in 1 view(multipe qr/patts).</li>
-        <li>Custom AR environment themes.</li>
-        <li>Real-time lighting and shadow enhancements.</li>
-        <li>Offline model caching and faster load times.</li>
-        <li>Multi-user AR collaboration (beta).</li>
-      </ul>
-    </div>
 
     <footer class="mt-8 text-sm text-gray-400">
       Connect: 
@@ -120,6 +151,7 @@
   </div>
 
   <script>
+    // ---- AD MODAL LOGIC ----
     const MODAL = document.getElementById('adModal');
     const CLOSE_BTN = document.getElementById('closeAdBtn');
     const CTA_LINK = document.getElementById('adCtaLink');
@@ -146,15 +178,20 @@
       setTimeout(() => { window.location.href = 'webar.html'; }, 800);
     });
 
-    // --- FUTURE UPDATES TOGGLE LOGIC ---
+    // ---- FUTURE UPDATES MODAL ----
+    const futureModal = document.getElementById('futureModal');
     const futureBtn = document.getElementById('futureBtn');
-    const futureText = document.getElementById('futureText');
+    const closeFutureBtn = document.getElementById('closeFutureBtn');
+    const closeFutureBtn2 = document.getElementById('closeFutureBtn2');
 
-    futureBtn.addEventListener('click', () => {
-      const expanded = futureText.classList.contains('expand');
-      futureText.classList.toggle('expand', !expanded);
-      futureText.classList.toggle('collapse', expanded);
-      futureBtn.textContent = expanded ? 'View Future Updates' : 'Hide Future Updates';
+    function showFuture() { futureModal.classList.add('visible'); }
+    function hideFuture() { futureModal.classList.remove('visible'); }
+
+    futureBtn.addEventListener('click', showFuture);
+    closeFutureBtn.addEventListener('click', hideFuture);
+    closeFutureBtn2.addEventListener('click', hideFuture);
+    futureModal.addEventListener('click', (e) => {
+      if (e.target === futureModal) hideFuture();
     });
   </script>
 </body>
