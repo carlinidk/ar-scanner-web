@@ -96,9 +96,26 @@
         100% { transform: translate(var(--x-end, 0), var(--y-end, 800px)) rotate(720deg); opacity: 0; }
       }
 
-      /* --- Double Tap Hint (Kept the styling but removing the show/hide logic) --- */
-      #doubleTapHint { display: none; } 
-      
+      /* --- Double Tap Hint Style --- */
+      #doubleTapHint {
+          position: fixed;
+          top: 80px; 
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(0, 0, 0, 0.6);
+          color: white;
+          padding: 8px 15px;
+          border-radius: 4px;
+          font-size: 14px;
+          z-index: 998;
+          opacity: 0;
+          pointer-events: none; 
+          transition: opacity 0.5s ease;
+      }
+      #doubleTapHint.visible { opacity: 1; }
+      #doubleTapHint.hidden { opacity: 0; }
+      #doubleTapHint.hidden-ui { display: none; }
+
 
       /* --- Bottom UI Container --- */
       .ui-container {
@@ -261,7 +278,9 @@
   <body>
     <div id="info" class="visible">Point your camera at the QR Marker 📱</div>
     
-    <div id="doubleTapHint"></div> 
+    <div id="doubleTapHint">
+        *DOUBLE TAP* anywhere to bring the UI back!
+    </div>
     
     <div id="easterEggContainer">
         <div id="easterEggText">I love my GF ❤️</div>
@@ -313,8 +332,10 @@
     <script>
       // --- Constants for Tap Logic ---
       const DEFAULT_SCALE_VALUE = 0.09;
-      const EASTER_EGG_TAPS = 3; // The new required tap count
-      const TAP_RESET_DELAY = 800; // ms: Max time between taps
+      const EASTER_EGG_TAPS = 3; // The required tap count
+      const DOUBLE_TAP_DELAY = 300; // ms: Max time between taps for double-tap
+      const TAP_RESET_DELAY = 800; // ms: Max time between taps for the N-tap sequence
+
 
       // --- Element Selectors ---
       const marker = document.getElementById('marker');
@@ -326,14 +347,17 @@
       const resetBtn = document.getElementById('resetBtn'); 
       const uiContainer = document.getElementById('uiContainer');
       const hideUiBtn = document.getElementById('hideUiBtn');
+      const doubleTapHint = document.getElementById('doubleTapHint');
       const easterEggContainer = document.getElementById('easterEggContainer');
 
 
       // --- State Variables ---
       let isRotating = false;
       let rotationInterval;
+      let hintTimeout;
       
       // Tap Logic State
+      let lastTapTime = 0; // Tracks time for double-tap and 3-tap
       let tapCount = 0;
       let tapTimeout;
       
@@ -379,16 +403,32 @@
 
 
       // --- UI Control Functions ---
-      // Keeping these minimal as the request simplifies the tap conflicts
+
       const hideUI = () => {
           uiContainer.classList.add('hidden-ui');
           info.classList.add('hidden-ui');
+          
+          doubleTapHint.classList.remove('hidden');
+          doubleTapHint.classList.add('visible');
+          
+          clearTimeout(hintTimeout);
+          
+          hintTimeout = setTimeout(() => {
+              doubleTapHint.classList.remove('visible');
+              doubleTapHint.classList.add('hidden');
+          }, 5000); 
       };
 
       const showUI = () => {
           uiContainer.classList.remove('hidden-ui');
           info.classList.remove('hidden-ui');
           
+          // Clear and hide the hint immediately when the UI is brought back
+          clearTimeout(hintTimeout);
+          doubleTapHint.classList.remove('visible');
+          doubleTapHint.classList.add('hidden');
+          
+          // Re-show the standard info visibility based on marker state
           if (marker.getAttribute('visible')) {
               info.classList.remove('visible');
               info.classList.add('hidden');
@@ -401,7 +441,9 @@
       // Function to display the Easter Egg Text
       const showEasterEgg = () => {
           // Hide all normal UI elements
-          hideUI();
+          uiContainer.classList.add('hidden-ui');
+          info.classList.add('hidden-ui');
+          doubleTapHint.classList.add('hidden-ui');
           
           // Generate confetti
           generateConfetti();
@@ -449,7 +491,7 @@
       });
 
 
-      // --- UI Interaction Event Listeners ---
+      // --- UI Interaction Event Listeners (Model/Controls) ---
       model.addEventListener('click', () => {
         model.emit('spin');
       });
@@ -498,25 +540,68 @@
       easterEggContainer.addEventListener('click', hideEasterEgg);
 
 
-      // --- PRIMARY 3-TAP EASTER EGG LOGIC ---
+      // --- PRIMARY TAP LOGIC (Double-Tap & 3-Tap Easter Egg) ---
       document.body.addEventListener('click', (event) => {
-          // 1. IGNORE clicks if the easter egg is showing OR if the click is on an active UI button/slider
-          if (easterEggContainer.style.display === 'flex' || event.target.closest('.ui-container')) {
-              return;
+          const currentTime = new Date().getTime();
+          const tapLength = currentTime - lastTapTime;
+          let doubleTapOccurred = false;
+
+          // 1. --- Easter Egg Exit Logic ---
+          if (easterEggContainer.style.display === 'flex') {
+              // The tap listener on easterEggContainer handles the exit, 
+              // but we need to ensure this main listener doesn't interfere.
+              // Since the container covers the whole body, we return here.
+              return; 
           }
           
-          // Reset tap counter if the time between taps is too long
-          clearTimeout(tapTimeout);
+          // 2. --- Double Tap (Show UI) Logic ---
+          // Check if the UI is hidden AND the click is not on an active UI element (like a button)
+          const isUIHidden = uiContainer.classList.contains('hidden-ui');
+          const isNotOnUI = !event.target.closest('.ui-container') && !event.target.closest('#doubleTapHint');
           
-          tapCount++;
-          
-          if (tapCount >= EASTER_EGG_TAPS) {
-              showEasterEgg();
-          } else {
-              // Set timeout to reset tapCount if no subsequent tap occurs in time
-              tapTimeout = setTimeout(() => {
+          if (isUIHidden && isNotOnUI) {
+              if (tapLength < DOUBLE_TAP_DELAY && tapLength > 0) {
+                  showUI();
+                  doubleTapOccurred = true;
+                  lastTapTime = 0; // Reset last tap time to prevent 3-tap interference
+              } else {
+                  lastTapTime = currentTime;
+              }
+          }
+
+          // 3. --- 3-Tap Easter Egg Logic ---
+          // Only proceed if a double-tap didn't just fire AND the click wasn't on a UI control
+          const isNotOnControls = !event.target.closest('.ui-container');
+
+          if (!doubleTapOccurred && isNotOnControls) {
+              
+              // Reset tap counter if the time between taps is too long
+              if (tapLength > TAP_RESET_DELAY || tapLength < 0) {
                   tapCount = 0;
-              }, TAP_RESET_DELAY);
+                  clearTimeout(tapTimeout);
+              }
+              
+              tapCount++;
+              
+              if (tapCount >= EASTER_EGG_TAPS) {
+                  showEasterEgg();
+                  lastTapTime = 0; // Reset after successfully showing
+              } else {
+                  // Set timeout to reset tapCount if no subsequent tap occurs in time
+                  clearTimeout(tapTimeout); 
+                  tapTimeout = setTimeout(() => {
+                      tapCount = 0;
+                  }, TAP_RESET_DELAY);
+                  
+                  // Ensure lastTapTime is set for the next tap in the sequence
+                  if (!isUIHidden) { // Only update lastTapTime here if we aren't handling double-tap logic above
+                      lastTapTime = currentTime; 
+                  }
+              }
+          } else if (doubleTapOccurred) {
+              // If double-tap took priority, reset the 3-tap sequence count
+              tapCount = 0;
+              clearTimeout(tapTimeout);
           }
       });
     </script>
