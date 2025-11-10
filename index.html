@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Welcome to WebAR</title>
   
-  <!-- Load Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
   <style>
@@ -102,17 +101,73 @@
       animation-delay: 750ms;
       border: 4px solid #e0e7ff; 
     }
+
+    /* --- Pop-up Modal Styles (NEW) --- */
+    #adModal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 50; /* Above all content */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    #adModal.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+    #adContent {
+      position: relative;
+      /* Max width for desktop, full width on mobile */
+      max-width: 340px; 
+      transform: scale(0.95);
+      transition: transform 0.3s ease;
+    }
+    #adModal.visible #adContent {
+      transform: scale(1);
+    }
   </style>
 </head>
 
 <body class="h-screen flex items-center justify-center fade-in">
   
-  <!-- Animated Background Shapes -->
+  <div id="adModal">
+      <div id="adContent" class="bg-gray-800 rounded-lg shadow-2xl p-4 text-center">
+          
+          <button id="closeAdBtn" class="absolute top-2 right-2 text-gray-400 hover:text-white transition z-51" aria-label="Close Advertisement">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+          
+          <h3 class="text-xl font-bold text-white mb-3">Check out our recommended gear!</h3>
+
+          <a href="https://amzn.to/47LJWd5" target="_blank" id="adCtaLink">
+              <img src="ad.jpg" alt="Featured Product Ad" class="w-[300px] h-[250px] mx-auto rounded-lg object-cover border-2 border-indigo-500/50" width="300" height="250">
+          </a>
+          
+          <p class="text-sm text-gray-400 mt-3 mb-4">
+              Click the image or button below to view the product on Amazon.
+          </p>
+
+          <a href="https://amzn.to/47LJWd5" target="_blank" 
+             class="block w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg transition duration-300 shadow-lg shadow-indigo-600/50">
+              View Product
+          </a>
+          <p class="text-xs text-gray-500 mt-2">
+            As an Amazon Associate, I earn from qualifying purchases.
+          </p>
+          
+      </div>
+  </div>
   <div class="shape shape-1"></div>
   <div class="shape shape-2"></div>
   <div class="shape shape-3"></div>
 
-  <!-- Main Content Container -->
   <div class="container text-center z-10 p-8 md:p-12 
               bg-gray-900/80 backdrop-blur-sm 
               rounded-2xl shadow-2xl max-w-xl w-11/12 
@@ -120,7 +175,6 @@
     
     <div class="space-y-4">
         
-        <!-- NEW ANIMATED RING ICON -->
         <div class="ar-ring-container mb-6">
             <div class="ring"></div>
             <div class="ring ring-2"></div>
@@ -137,7 +191,6 @@
         </p>
     </div>
     
-    <!-- Action Button -->
     <button id="enterBtn" 
             class="mt-8 w-full sm:w-auto 
                    bg-indigo-600 hover:bg-indigo-500 
@@ -148,7 +201,6 @@
       Launch AR Experience
     </button>
     
-    <!-- Footer/Contact Info -->
     <footer class="mt-8 text-sm text-gray-400">
       Connect: 
       <a href="https://instagram.com/carlindsouza" target="_blank" class="text-indigo-300 hover:text-indigo-200 transition">@carlindsouza</a>
@@ -159,8 +211,57 @@
   </div>
 
   <script>
-    // JavaScript for smooth fade-out and redirection
+    // --- AD MODAL FUNCTIONALITY (NEW) ---
+    const AD_TIMEOUT_MS = 2500; // Show ad after 2.5 seconds
+    const AD_HIDE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+    const MODAL = document.getElementById('adModal');
+    const CLOSE_BTN = document.getElementById('closeAdBtn');
+    const CTA_LINK = document.getElementById('adCtaLink'); // Target for the image link
+
+    function checkAdStatus() {
+        const lastClosed = localStorage.getItem('ad_last_closed');
+        const now = new Date().getTime();
+
+        // Check if the flag is set and if less than 24 hours have passed
+        if (lastClosed && (now - lastClosed < AD_HIDE_DURATION_MS)) {
+            return false; // Don't show the ad
+        }
+        return true; // Show the ad
+    }
+
+    function hideAd(setLocalStorage = false) {
+        MODAL.classList.remove('visible');
+        if (setLocalStorage) {
+            // Set the flag to hide the ad for the next 24 hours
+            localStorage.setItem('ad_last_closed', new Date().getTime());
+        }
+    }
+
+    function showAd() {
+        if (checkAdStatus()) {
+            setTimeout(() => {
+                MODAL.classList.add('visible');
+            }, AD_TIMEOUT_MS);
+        }
+    }
+    
+    // Attach close behavior
+    CLOSE_BTN.addEventListener('click', () => hideAd(true));
+    CTA_LINK.addEventListener('click', () => hideAd(true)); // Hide when image is clicked
+    
+    // Hide if backdrop is clicked (but not the ad content itself)
+    MODAL.addEventListener('click', (e) => {
+        if (e.target === MODAL) {
+            hideAd(true);
+        }
+    });
+
+    // Run the ad check on page load
+    showAd();
+    
+    // --- BUTTON AND REDIRECTION LOGIC (Existing) ---
     const btn = document.getElementById('enterBtn');
+    
     btn.addEventListener('click', () => {
       // Use the body class to trigger the fade-out
       document.body.classList.add('fade-out');
