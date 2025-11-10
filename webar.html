@@ -19,14 +19,12 @@
         height: 100%;
         font-family: Arial, sans-serif;
       }
-      /* Ensures a-scene fills the entire screen */
       a-scene {
         width: 100%;
         height: 100%;
         margin: 0;
         padding: 0;
       }
-      /* Use border-box for easier layout math */
       * {
         box-sizing: border-box;
       }
@@ -50,7 +48,7 @@
       #info.visible { opacity: 1; }
       #info.hidden { opacity: 0; }
 
-      /* --- Bottom UI Container (NEW) --- */
+      /* --- Bottom UI Container --- */
       .ui-container {
         position: fixed;
         bottom: 0;
@@ -58,20 +56,19 @@
         width: 100%;
         z-index: 999;
         display: flex;
-        flex-direction: column; /* Stacks slider and buttons vertically */
-        align-items: center;    /* Centers them horizontally */
+        flex-direction: column; 
+        align-items: center;    
         padding: 15px;
-        gap: 15px; /* Creates space between slider and button row */
-        /* Adds a subtle fade so controls don't just "float" */
+        gap: 15px; 
         background: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0));
       }
 
-      /* --- Button Row (NEW) --- */
+      /* --- Button Row --- */
       .button-row {
         display: flex;
-        flex-wrap: wrap; /* Allows buttons to stack on very small screens */
+        flex-wrap: wrap;
         justify-content: center;
-        gap: 10px; /* Space between buttons */
+        gap: 10px; 
       }
 
       /* --- Generic Button Style --- */
@@ -84,7 +81,6 @@
         font-size: 14px;
         font-weight: bold;
         cursor: pointer;
-        /* Improves mobile tap feedback */
         touch-action: manipulation; 
         -webkit-tap-highlight-color: transparent;
         transition: background-color 0.2s ease;
@@ -99,8 +95,8 @@
 
       /* --- Scale Slider Style --- */
       #scaleSlider {
-        width: 80%; /* Responsive width */
-        max-width: 300px; /* Keeps it from being too wide */
+        width: 80%; 
+        max-width: 300px;
         -webkit-appearance: none;
         height: 8px;
         background: #555;
@@ -133,9 +129,7 @@
       <input type="range" id="scaleSlider" min="0.01" max="2" step="0.01" value="0.09">
       <div class="button-row">
         <button id="rotateBtn">Rotate Model</button>
-        <button id="lockBtn">Lock Model</button>
-        <button id="playAnimationBtn">Play Animation</button>
-      </div>
+        </div>
     </div>
 
     <a-scene
@@ -170,16 +164,13 @@
       const model = document.getElementById('model');
       const info = document.getElementById('info');
       const rotateBtn = document.getElementById('rotateBtn');
-      const lockBtn = document.getElementById('lockBtn');
       const scaleSlider = document.getElementById('scaleSlider');
-      // ✅ FIXED: Added missing constant for the new button
-      const playAnimationBtn = document.getElementById('playAnimationBtn'); 
+      // (Removed playAnimationBtn and lockBtn constants)
 
       // --- State Variables ---
       let isRotating = false;
       let rotationInterval;
-      let isLocked = false;
-      let lockedClone = null;
+      // (Removed isLocked and lockedClone)
 
       // --- Event Listeners ---
       window.addEventListener('load', () => {
@@ -187,17 +178,15 @@
       });
 
       marker.addEventListener('markerFound', () => {
-        if (!isLocked) {
-          info.classList.remove('visible');
-          info.classList.add('hidden');
-        }
+        // Modified to not check for isLocked
+        info.classList.remove('visible');
+        info.classList.add('hidden');
       });
 
       marker.addEventListener('markerLost', () => {
-        if (!isLocked) {
-          info.classList.remove('hidden');
-          info.classList.add('visible');
-        }
+        // Modified to not check for isLocked
+        info.classList.remove('hidden');
+        info.classList.add('visible');
       });
 
       model.addEventListener('click', () => {
@@ -224,50 +213,8 @@
         model.setAttribute('scale', `${scaleValue} ${scaleValue} ${scaleValue}`);
       });
 
-      lockBtn.addEventListener('click', () => {
-        const scene = document.querySelector('a-scene');
-        if (!isLocked) {
-          const worldPos = new THREE.Vector3();
-          const worldRot = new THREE.Euler();
-          model.object3D.getWorldPosition(worldPos);
-          worldRot.copy(model.object3D.rotation);
-
-          lockedClone = document.createElement('a-entity');
-          lockedClone.setAttribute('gltf-model', model.getAttribute('gltf-model'));
-          lockedClone.setAttribute('scale', model.getAttribute('scale'));
-          lockedClone.object3D.position.copy(worldPos);
-          lockedClone.object3D.rotation.copy(worldRot);
-
-          scene.appendChild(lockedClone);
-          lockedClone.setAttribute('animation__fade', {
-            property: 'scale',
-            to: '0.13 0.13 0.13',
-            dur: 800,
-            easing: 'easeOutElastic'
-          });
-
-          isLocked = true;
-          lockBtn.textContent = 'Unlock Model';
-          alert('Model locked in real-world position ✅');
-        } else {
-          if (lockedClone) {
-            lockedClone.parentNode.removeChild(lockedClone);
-          }
-          isLocked = false;
-          lockBtn.textContent = 'Lock Model in Place';
-          alert('Model unlocked 🔓');
-        }
-      });
-
-      // ✅ FIXED: This event listener now works
-      playAnimationBtn.addEventListener('click', () => {
-        model.setAttribute('animation-mixer', {
-          clip: '*', 
-          loop: 'repeat',
-          timeScale: 1.0,
-        });
-        alert('Playing GLB animation! 🎬');
-      });
+      // (Removed lockBtn event listener)
+      // (Removed playAnimationBtn event listener)
     </script>
   </body>
 </html>
