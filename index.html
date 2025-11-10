@@ -211,65 +211,56 @@
   </div>
 
   <script>
-    // AD MODAL FUNCTIONALITY (NEW) 
-    const AD_TIMEOUT_MS = 250; // Show ad after 2.5 seconds
-   // const AD_HIDE_DURATION_MS = 24 * 60 * 60 * 1000; // 24hours in mili seconds
+    // --- AD MODAL FUNCTIONALITY (ALWAYS SHOW) ---
+    const AD_TIMEOUT_MS = 2500; // Pop-up delay (2.5 seconds)
     const MODAL = document.getElementById('adModal');
     const CLOSE_BTN = document.getElementById('closeAdBtn');
-    const CTA_LINK = document.getElementById('adCtaLink'); // Target for the image link
-
-    function checkAdStatus() {
-        const lastClosed = localStorage.getItem('ad_last_closed');
-        const now = new Date().getTime();
-
-        // Check if the flag is set and if less than 24 hours have passed
-        if (lastClosed && (now - lastClosed < AD_HIDE_DURATION_MS)) {
-            return false; // Don't show the ad
-        }
-        return true; // Show the ad
-    }
-
-    function hideAd(setLocalStorage = false) {
-        MODAL.classList.remove('visible');
-        if (setLocalStorage) {
-            // Set the flag to hide the ad for the next 24 hours
-            localStorage.setItem('ad_last_closed', new Date().getTime());
-        }
-    }
+    const CTA_LINK = document.getElementById('adCtaLink'); 
+    
+    // Get the main button
+    const btn = document.getElementById('enterBtn');
 
     function showAd() {
-        if (checkAdStatus()) {
-            setTimeout(() => {
+        // Show the ad every time after the delay
+        setTimeout(() => {
+            // Only show the ad if the user hasn't already clicked the Launch button
+            if (!document.body.classList.contains('fade-out')) {
                 MODAL.classList.add('visible');
-            }, AD_TIMEOUT_MS);
-        }
+            }
+        }, AD_TIMEOUT_MS);
+    }
+
+    function hideAd() {
+        // Just hide the ad without saving anything to local storage
+        MODAL.classList.remove('visible');
     }
     
     // Attach close behavior
-    CLOSE_BTN.addEventListener('click', () => hideAd(true));
-    CTA_LINK.addEventListener('click', () => hideAd(true)); // Hide when image is clicked
+    CLOSE_BTN.addEventListener('click', hideAd);
+    CTA_LINK.addEventListener('click', hideAd); 
     
-    // Hide if backdrop is clicked (but not the ad content itself)
+    // Hide if backdrop is clicked
     MODAL.addEventListener('click', (e) => {
         if (e.target === MODAL) {
-            hideAd(true);
+            hideAd();
         }
     });
 
-    // Run the ad check on page load
-    showAd();
-    
-    // --- BUTTON AND REDIRECTION LOGIC (Existing) ---
-    const btn = document.getElementById('enterBtn');
-    
+    // Run the ad function on page load
+    showAd(); 
+
+    // --- BUTTON AND REDIRECTION LOGIC (FIXED) ---
     btn.addEventListener('click', () => {
-      // Use the body class to trigger the fade-out
+      // 1. FIX: Hide the ad modal immediately to remove any visual/z-index conflict
+      hideAd(); 
+        
+      // 2. Use the body class to trigger the fade-out
       document.body.classList.add('fade-out');
       
-      // Remove the fade-in class so it doesn't conflict with fade-out
+      // 3. Remove the fade-in class so it doesn't conflict with fade-out
       document.body.classList.remove('fade-in'); 
 
-      // Wait for the fade-out transition to complete (0.8s) before redirecting
+      // 4. Wait for the fade-out transition to complete (0.8s) before redirecting
       setTimeout(() => {
         window.location.href = 'webar.html';
       }, 800);
