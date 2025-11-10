@@ -10,10 +10,28 @@
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v7.0.0/dist/aframe-extras.min.js"></script>
     <style>
-      html, body, a-scene {
-        margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%;
+      /* --- Global Setup --- */
+      html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        font-family: Arial, sans-serif;
+      }
+      /* Ensures a-scene fills the entire screen */
+      a-scene {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      /* Use border-box for easier layout math */
+      * {
+        box-sizing: border-box;
       }
 
+      /* --- Top Info Box --- */
       #info {
         position: fixed;
         top: 20px;
@@ -23,67 +41,102 @@
         color: #fff;
         padding: 10px 20px;
         border-radius: 6px;
-        font-family: Arial, sans-serif;
         font-size: 16px;
         opacity: 0;
         transition: opacity 1s ease;
         z-index: 999;
+        text-align: center;
       }
-
       #info.visible { opacity: 1; }
       #info.hidden { opacity: 0; }
 
-      /* Updated selectors to include the new button */
-      #rotateBtn, #lockBtn, #playAnimationBtn {
+      /* --- Bottom UI Container (NEW) --- */
+      .ui-container {
         position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
         z-index: 999;
+        display: flex;
+        flex-direction: column; /* Stacks slider and buttons vertically */
+        align-items: center;    /* Centers them horizontally */
+        padding: 15px;
+        gap: 15px; /* Creates space between slider and button row */
+        /* Adds a subtle fade so controls don't just "float" */
+        background: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0));
+      }
+
+      /* --- Button Row (NEW) --- */
+      .button-row {
+        display: flex;
+        flex-wrap: wrap; /* Allows buttons to stack on very small screens */
+        justify-content: center;
+        gap: 10px; /* Space between buttons */
+      }
+
+      /* --- Generic Button Style --- */
+      .button-row button {
         background: rgba(0, 0, 0, 0.7);
         color: white;
         border: none;
-        padding: 10px 20px;
+        padding: 12px 18px;
         border-radius: 5px;
-        font-size: 16px;
+        font-size: 14px;
+        font-weight: bold;
         cursor: pointer;
-        /* Aligning buttons vertically */
-        left: 50%;
-        transform: translateX(-50%);
+        /* Improves mobile tap feedback */
+        touch-action: manipulation; 
+        -webkit-tap-highlight-color: transparent;
+        transition: background-color 0.2s ease;
       }
-
-      #rotateBtn { bottom: 120px; }
-
+      
+      .button-row button:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+      .button-row button:active {
+        background: rgba(255, 255, 255, 0.5);
+      }
 
       /* --- Scale Slider Style --- */
       #scaleSlider {
-        position: fixed;
-        bottom: 220px; /* Moved down to accommodate new button */
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 999;
-        width: 200px;
+        width: 80%; /* Responsive width */
+        max-width: 300px; /* Keeps it from being too wide */
         -webkit-appearance: none;
         height: 8px;
-        background: #444;
+        background: #555;
         border-radius: 5px;
         outline: none;
       }
       #scaleSlider::-webkit-slider-thumb {
         -webkit-appearance: none;
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
         background: white;
         border-radius: 50%;
         cursor: pointer;
+      }
+      #scaleSlider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        background: white;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 0;
       }
     </style>
   </head>
 
   <body>
     <div id="info" class="visible">Point your camera at the QR Marker 📱</div>
-    <button id="rotateBtn">Rotate Model</button>
-    <button id="lockBtn">Lock Model in Place</button>
-  
 
-    <input type="range" id="scaleSlider" min="0.01" max="2" step="0.01" value="0.09">
+    <div class="ui-container">
+      <input type="range" id="scaleSlider" min="0.01" max="2" step="0.01" value="0.09">
+      <div class="button-row">
+        <button id="rotateBtn">Rotate Model</button>
+        <button id="lockBtn">Lock Model</button>
+        <button id="playAnimationBtn">Play Animation</button>
+      </div>
+    </div>
 
     <a-scene
       embedded
@@ -97,7 +150,7 @@
           scale="0.09 0.09 0.09"
           position="0 0 0"
           animation__spin="property: rotation; to: 0 360 0; dur: 2000; startEvents: spin; easing: linear;"
-          animation-mixer="clip: *; loop: repeat; crossFadeDuration: 0;" /* ⚠️ ADDED: animation-mixer */
+          animation-mixer="clip: *; loop: repeat; crossFadeDuration: 0;"
         ></a-entity>
       </a-marker>
 
@@ -112,18 +165,23 @@
     </a-scene>
 
     <script>
+      // --- Element Selectors ---
       const marker = document.getElementById('marker');
       const model = document.getElementById('model');
       const info = document.getElementById('info');
       const rotateBtn = document.getElementById('rotateBtn');
       const lockBtn = document.getElementById('lockBtn');
       const scaleSlider = document.getElementById('scaleSlider');
+      // ✅ FIXED: Added missing constant for the new button
+      const playAnimationBtn = document.getElementById('playAnimationBtn'); 
 
+      // --- State Variables ---
       let isRotating = false;
       let rotationInterval;
       let isLocked = false;
       let lockedClone = null;
 
+      // --- Event Listeners ---
       window.addEventListener('load', () => {
         info.classList.add('visible');
       });
@@ -201,20 +259,13 @@
         }
       });
 
-      // 🆕 NEW Animation Button Handler
+      // ✅ FIXED: This event listener now works
       playAnimationBtn.addEventListener('click', () => {
-        // Use the animation-mixer component to play the clip.
-        // The default action is to set it to 'loop: once' and play.
-        // It will automatically start playing the first (or only) animation clip.
         model.setAttribute('animation-mixer', {
-          clip: '*', // Use '*' to match any animation clip in the GLB
+          clip: '*', 
           loop: 'repeat',
-          timeScale: 1.0, // Ensures it plays at normal speed
-          // The component automatically starts the animation when these attributes are set.
+          timeScale: 1.0,
         });
-
-        // Optional: Re-add the listener to play it again when it finishes (if needed)
-        // or change the button text
         alert('Playing GLB animation! 🎬');
       });
     </script>
