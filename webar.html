@@ -63,6 +63,26 @@
         background: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0));
       }
 
+      /* ✅ NEW: Scale Control Row for Slider and Label (Idea 7) */
+      .scale-control-row {
+          display: flex;
+          align-items: center;
+          width: 80%;
+          max-width: 300px;
+          gap: 10px;
+          background: rgba(0, 0, 0, 0.5);
+          padding: 8px 12px;
+          border-radius: 5px;
+      }
+      #scaleValue {
+          color: white;
+          font-size: 14px;
+          font-weight: bold;
+          min-width: 60px; /* fixed width for alignment */
+          text-align: right;
+      }
+
+
       /* --- Button Row --- */
       .button-row {
         display: flex;
@@ -95,11 +115,10 @@
 
       /* --- Scale Slider Style --- */
       #scaleSlider {
-        width: 80%; 
-        max-width: 300px;
+        flex-grow: 1; /* Allows slider to fill space in control row */
         -webkit-appearance: none;
         height: 8px;
-        background: #555;
+        background: #888;
         border-radius: 5px;
         outline: none;
       }
@@ -120,13 +139,71 @@
         border: 0;
       }
     </style>
+    <script>
+        AFRAME.registerComponent('fading-model', {
+            schema: {
+                visible: {type: 'boolean', default: true},
+                fadeDuration: {type: 'number', default: 500} // milliseconds
+            },
+
+            init: function() {
+                this.el.setAttribute('material', 'opacity: 1; transparent: true;');
+                this.originalOpacity = 1;
+                this.isFading = false;
+            },
+
+            update: function(oldData) {
+                if (oldData.visible !== this.data.visible) {
+                    this.toggleVisibility(this.data.visible);
+                }
+            },
+
+            toggleVisibility: function(shouldBeVisible) {
+                if (this.isFading) return;
+                
+                this.isFading = true;
+                const targetOpacity = shouldBeVisible ? this.originalOpacity : 0;
+                const startOpacity = parseFloat(this.el.getAttribute('material', 'opacity').opacity);
+                const duration = this.data.fadeDuration;
+                const startTime = performance.now();
+
+                const animate = (time) => {
+                    const elapsed = time - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const currentOpacity = startOpacity + (targetOpacity - startOpacity) * progress;
+                    
+                    this.el.setAttribute('material', 'opacity', currentOpacity);
+
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        this.isFading = false;
+                        // Hides the entity completely when faded out
+                        this.el.setAttribute('visible', shouldBeVisible);
+                    }
+                };
+
+                // Ensures the entity is visible while fading in
+                if(shouldBeVisible) {
+                   this.el.setAttribute('visible', true);
+                }
+                
+                requestAnimationFrame(animate);
+            }
+        });
+    </script>
   </head>
 
   <body>
     <div id="info" class="visible">Point your camera at the QR Marker 📱</div>
 
     <div class="ui-container">
-      <input type="range" id="scaleSlider" min="0.01" max="2" step="0.01" value="0.09">
+      <div class="scale-control-row">
+          <label for="scaleSlider">Scale:</label>
+          <input type="range" id="scaleSlider" min="0.01" max="2" step="0.01" value="0.09">
+          <span id="scaleValue">0.09</span> 
+      </div>
+      
       <div class="button-row">
         <button id="rotateBtn">Rotate Model</button>
         </div>
@@ -145,7 +222,7 @@
           position="0 0 0"
           animation__spin="property: rotation; to: 0 360 0; dur: 2000; startEvents: spin; easing: linear;"
           animation-mixer="clip: *; loop: repeat; crossFadeDuration: 0;"
-        ></a-entity>
+          fading-model="visible: false" ></a-entity>
       </a-marker>
 
       <a-assets>
@@ -165,30 +242,33 @@
       const info = document.getElementById('info');
       const rotateBtn = document.getElementById('rotateBtn');
       const scaleSlider = document.getElementById('scaleSlider');
-      // (Removed playAnimationBtn and lockBtn constants)
+      // ✅ NEW: Scale Value Label
+      const scaleValueLabel = document.getElementById('scaleValue');
 
       // --- State Variables ---
       let isRotating = false;
       let rotationInterval;
-      // (Removed isLocked and lockedClone)
 
-      // --- Event Listeners ---
+      // --- AR Event Listeners (Idea 8 Logic) ---
       window.addEventListener('load', () => {
         info.classList.add('visible');
       });
 
       marker.addEventListener('markerFound', () => {
-        // Modified to not check for isLocked
         info.classList.remove('visible');
         info.classList.add('hidden');
+        // ✅ NEW: Fade In Model
+        model.setAttribute('fading-model', 'visible', true);
       });
 
       marker.addEventListener('markerLost', () => {
-        // Modified to not check for isLocked
         info.classList.remove('hidden');
         info.classList.add('visible');
+        // ✅ NEW: Fade Out Model
+        model.setAttribute('fading-model', 'visible', false);
       });
 
+      // --- UI Event Listeners ---
       model.addEventListener('click', () => {
         model.emit('spin');
       });
@@ -209,12 +289,11 @@
       });
 
       scaleSlider.addEventListener('input', () => {
-        const scaleValue = scaleSlider.value;
+        const scaleValue = parseFloat(scaleSlider.value).toFixed(2);
         model.setAttribute('scale', `${scaleValue} ${scaleValue} ${scaleValue}`);
+        // ✅ NEW: Update scale label (Idea 7)
+        scaleValueLabel.textContent = scaleValue;
       });
-
-      // (Removed lockBtn event listener)
-      // (Removed playAnimationBtn event listener)
     </script>
   </body>
 </html>
