@@ -48,6 +48,27 @@
       #info.visible { opacity: 1; }
       #info.hidden { opacity: 0; }
 
+      /* --- NEW: Double Tap Hint Style --- */
+      #doubleTapHint {
+          position: fixed;
+          top: 80px; /* Positioned below the main info box */
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(0, 0, 0, 0.6);
+          color: white;
+          padding: 8px 15px;
+          border-radius: 4px;
+          font-size: 14px;
+          z-index: 998;
+          opacity: 0;
+          pointer-events: none; /* Allows clicks to pass through */
+          transition: opacity 0.5s ease;
+      }
+      #doubleTapHint.visible { opacity: 1; }
+      #doubleTapHint.hidden { opacity: 0; }
+      #doubleTapHint.hidden-ui { display: none; } /* Used by the general show/hide logic */
+
+
       /* --- Bottom UI Container --- */
       .ui-container {
         position: fixed;
@@ -61,14 +82,12 @@
         padding: 15px;
         gap: 15px; 
         background: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0));
-        /* Add transition for smooth hiding */
         transition: transform 0.3s ease, opacity 0.3s ease;
       }
-      /* NEW: Class for hiding the UI */
       .ui-container.hidden-ui {
           transform: translateY(100%);
           opacity: 0;
-          pointer-events: none; /* Crucial: stops clicks/taps from registering on hidden UI */
+          pointer-events: none;
       }
 
 
@@ -124,7 +143,7 @@
       
       /* Distinct style for hide button */
       #hideUiBtn {
-          background-color: #5a94f5; /* Blue tone for UI control */
+          background-color: #5a94f5;
       }
 
 
@@ -210,6 +229,10 @@
 
   <body>
     <div id="info" class="visible">Point your camera at the QR Marker 📱</div>
+    
+    <div id="doubleTapHint">
+        *DOUBLE TAP* anywhere to bring the UI back!
+    </div>
 
     <div class="ui-container" id="uiContainer">
       <div class="scale-control-row">
@@ -266,30 +289,49 @@
       const scaleSlider = document.getElementById('scaleSlider');
       const scaleValueLabel = document.getElementById('scaleValue');
       const resetBtn = document.getElementById('resetBtn'); 
-      // ✅ NEW: UI Control Elements
       const uiContainer = document.getElementById('uiContainer');
       const hideUiBtn = document.getElementById('hideUiBtn');
+      // ✅ NEW: Double Tap Hint Selector
+      const doubleTapHint = document.getElementById('doubleTapHint');
 
       // --- State Variables ---
       let isRotating = false;
       let rotationInterval;
-      // ✅ NEW: State for double-tap detection
       let lastTap = 0;
       const DOUBLE_TAP_DELAY = 300; // ms
+      // ✅ NEW: Timer variable for the hint
+      let hintTimeout;
+
 
       // --- UI Control Functions ---
 
-      // Function to hide the UI (called by the button)
       const hideUI = () => {
           uiContainer.classList.add('hidden-ui');
-          // Also hide the top info box for a fully clean screen
           info.classList.add('hidden-ui');
+          
+          // 1. Show the hint immediately
+          doubleTapHint.classList.remove('hidden');
+          doubleTapHint.classList.add('visible');
+          
+          // 2. Clear any existing timeout (safety)
+          clearTimeout(hintTimeout);
+          
+          // 3. Set a new timeout to hide the hint after 5 seconds (5000ms)
+          hintTimeout = setTimeout(() => {
+              doubleTapHint.classList.remove('visible');
+              doubleTapHint.classList.add('hidden');
+          }, 5000); 
       };
 
-      // Function to show the UI (called by double-tap)
       const showUI = () => {
           uiContainer.classList.remove('hidden-ui');
           info.classList.remove('hidden-ui');
+          
+          // Clear and hide the hint immediately when the UI is brought back
+          clearTimeout(hintTimeout);
+          doubleTapHint.classList.remove('visible');
+          doubleTapHint.classList.add('hidden');
+          
           // Re-show the standard info visibility based on marker state
           if (marker.getAttribute('visible')) {
               info.classList.remove('visible');
@@ -307,7 +349,6 @@
       });
 
       marker.addEventListener('markerFound', () => {
-        // Only change visibility if the UI is NOT fully hidden
         if (!info.classList.contains('hidden-ui')) {
             info.classList.remove('visible');
             info.classList.add('hidden');
@@ -316,7 +357,6 @@
       });
 
       marker.addEventListener('markerLost', () => {
-        // Only change visibility if the UI is NOT fully hidden
         if (!info.classList.contains('hidden-ui')) {
             info.classList.remove('hidden');
             info.classList.add('visible');
@@ -327,12 +367,10 @@
 
       // --- UI Interaction Event Listeners ---
 
-      // Model Click (Spin)
       model.addEventListener('click', () => {
         model.emit('spin');
       });
 
-      // Rotate Button Toggle
       rotateBtn.addEventListener('click', () => {
         if (!isRotating) {
           rotationInterval = setInterval(() => {
@@ -348,48 +386,41 @@
         isRotating = !isRotating;
       });
 
-      // Scale Slider
       scaleSlider.addEventListener('input', () => {
         const scaleValue = parseFloat(scaleSlider.value).toFixed(2);
         model.setAttribute('scale', `${scaleValue} ${scaleValue} ${scaleValue}`);
         scaleValueLabel.textContent = scaleValue;
       });
 
-      // Reset Button
       resetBtn.addEventListener('click', () => {
-          // 1. Stop Rotation
           if (isRotating) { 
               clearInterval(rotationInterval);
               isRotating = false;
               rotateBtn.textContent = 'Rotate Model';
           }
           
-          // 2. Reset Scale
           const scaleString = `${DEFAULT_SCALE_VALUE} ${DEFAULT_SCALE_VALUE} ${DEFAULT_SCALE_VALUE}`;
           model.setAttribute('scale', scaleString);
           scaleSlider.value = DEFAULT_SCALE_VALUE; 
           scaleValueLabel.textContent = DEFAULT_SCALE_VALUE.toFixed(2);
           
-          // 3. Reset Rotation Angle
           model.setAttribute('rotation', '0 0 0');
 
           alert('Model reset to default position and scale!');
       });
       
-      // ✅ NEW: Hide UI Button Click
       hideUiBtn.addEventListener('click', hideUI);
 
 
-      // ✅ NEW: Double-Tap/Double-Click Logic to Show UI
+      // Double-Tap/Double-Click Logic to Show UI
       document.body.addEventListener('click', (event) => {
-          // Check if the target is *outside* the hidden UI container (i.e., on the camera view)
+          // Check if the UI is hidden AND the click target is not on the hidden UI itself
           if (uiContainer.classList.contains('hidden-ui') && !event.target.closest('.ui-container')) {
               const currentTime = new Date().getTime();
               const tapLength = currentTime - lastTap;
               
               if (tapLength < DOUBLE_TAP_DELAY && tapLength > 0) {
                   showUI();
-                  // Reset lastTap to prevent triple/quadruple taps from triggering
                   lastTap = 0; 
               } else {
                   lastTap = currentTime;
