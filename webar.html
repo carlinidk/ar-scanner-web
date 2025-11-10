@@ -61,7 +61,16 @@
         padding: 15px;
         gap: 15px; 
         background: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0));
+        /* Add transition for smooth hiding */
+        transition: transform 0.3s ease, opacity 0.3s ease;
       }
+      /* NEW: Class for hiding the UI */
+      .ui-container.hidden-ui {
+          transform: translateY(100%);
+          opacity: 0;
+          pointer-events: none; /* Crucial: stops clicks/taps from registering on hidden UI */
+      }
+
 
       /* Scale Control Row for Slider and Label */
       .scale-control-row {
@@ -113,9 +122,9 @@
         background: rgba(255, 255, 255, 0.5);
       }
       
-      /* Distinct style for screenshot button */
-      #screenshotBtn {
-          background-color: #f55a4a; /* Reddish tone for capture */
+      /* Distinct style for hide button */
+      #hideUiBtn {
+          background-color: #5a94f5; /* Blue tone for UI control */
       }
 
 
@@ -156,7 +165,6 @@
               this.el.setAttribute('material', 'opacity: 1; transparent: true;');
               this.originalOpacity = 1;
               this.isFading = false;
-              // Set initial visibility based on the component's default schema
               this.el.setAttribute('visible', this.data.visible);
           },
 
@@ -186,12 +194,10 @@
                       requestAnimationFrame(animate);
                   } else {
                       this.isFading = false;
-                      // Hides the entity completely when faded out (opacity is 0)
                       this.el.setAttribute('visible', shouldBeVisible);
                   }
               };
 
-              // Ensures the entity is visible while fading in
               if(shouldBeVisible) {
                  this.el.setAttribute('visible', true);
               }
@@ -205,7 +211,7 @@
   <body>
     <div id="info" class="visible">Point your camera at the QR Marker 📱</div>
 
-    <div class="ui-container">
+    <div class="ui-container" id="uiContainer">
       <div class="scale-control-row">
           <label for="scaleSlider">Scale:</label>
           <input type="range" id="scaleSlider" min="0.01" max="2" step="0.01" value="0.09">
@@ -215,7 +221,7 @@
       <div class="button-row">
         <button id="rotateBtn">Rotate Model</button>
         <button id="resetBtn">🔄 Reset</button>
-        <button id="screenshotBtn">📸 Screenshot</button>
+        <button id="hideUiBtn">👁️ Hide UI</button>
       </div>
     </div>
 
@@ -223,7 +229,8 @@
       embedded
       arjs="sourceType: webcam; debugUIEnabled: false;"
       style="width:100%; height:100%; margin:0; padding:0;"
-      screenshot="width: 1280; height: 720" >
+      screenshot="width: 1280; height: 720"
+    >
       <a-marker type="pattern" url="Patts/qr1.patt" id="marker" emitevents="true">
         <a-entity
           id="model"
@@ -251,42 +258,81 @@
       const DEFAULT_SCALE_VALUE = 0.09;
 
       // --- Element Selectors ---
-      const scene = document.querySelector('a-scene'); // Added for screenshot component
+      const scene = document.querySelector('a-scene'); 
       const marker = document.getElementById('marker');
       const model = document.getElementById('model');
       const info = document.getElementById('info');
       const rotateBtn = document.getElementById('rotateBtn');
       const scaleSlider = document.getElementById('scaleSlider');
       const scaleValueLabel = document.getElementById('scaleValue');
-      const resetBtn = document.getElementById('resetBtn'); // NEW
-      const screenshotBtn = document.getElementById('screenshotBtn'); // NEW
+      const resetBtn = document.getElementById('resetBtn'); 
+      // ✅ NEW: UI Control Elements
+      const uiContainer = document.getElementById('uiContainer');
+      const hideUiBtn = document.getElementById('hideUiBtn');
 
       // --- State Variables ---
       let isRotating = false;
       let rotationInterval;
+      // ✅ NEW: State for double-tap detection
+      let lastTap = 0;
+      const DOUBLE_TAP_DELAY = 300; // ms
 
-      // --- AR Event Listeners (Marker Found/Lost) ---
+      // --- UI Control Functions ---
+
+      // Function to hide the UI (called by the button)
+      const hideUI = () => {
+          uiContainer.classList.add('hidden-ui');
+          // Also hide the top info box for a fully clean screen
+          info.classList.add('hidden-ui');
+      };
+
+      // Function to show the UI (called by double-tap)
+      const showUI = () => {
+          uiContainer.classList.remove('hidden-ui');
+          info.classList.remove('hidden-ui');
+          // Re-show the standard info visibility based on marker state
+          if (marker.getAttribute('visible')) {
+              info.classList.remove('visible');
+              info.classList.add('hidden');
+          } else {
+              info.classList.remove('hidden');
+              info.classList.add('visible');
+          }
+      };
+
+
+      // --- Marker Found/Lost Logic ---
       window.addEventListener('load', () => {
         info.classList.add('visible');
       });
 
       marker.addEventListener('markerFound', () => {
-        info.classList.remove('visible');
-        info.classList.add('hidden');
+        // Only change visibility if the UI is NOT fully hidden
+        if (!info.classList.contains('hidden-ui')) {
+            info.classList.remove('visible');
+            info.classList.add('hidden');
+        }
         model.setAttribute('fading-model', 'visible', true);
       });
 
       marker.addEventListener('markerLost', () => {
-        info.classList.remove('hidden');
-        info.classList.add('visible');
+        // Only change visibility if the UI is NOT fully hidden
+        if (!info.classList.contains('hidden-ui')) {
+            info.classList.remove('hidden');
+            info.classList.add('visible');
+        }
         model.setAttribute('fading-model', 'visible', false);
       });
 
-      // --- UI Event Listeners ---
+
+      // --- UI Interaction Event Listeners ---
+
+      // Model Click (Spin)
       model.addEventListener('click', () => {
         model.emit('spin');
       });
 
+      // Rotate Button Toggle
       rotateBtn.addEventListener('click', () => {
         if (!isRotating) {
           rotationInterval = setInterval(() => {
@@ -302,13 +348,14 @@
         isRotating = !isRotating;
       });
 
+      // Scale Slider
       scaleSlider.addEventListener('input', () => {
         const scaleValue = parseFloat(scaleSlider.value).toFixed(2);
         model.setAttribute('scale', `${scaleValue} ${scaleValue} ${scaleValue}`);
         scaleValueLabel.textContent = scaleValue;
       });
 
-      // ✅ NEW: Reset Button Logic
+      // Reset Button
       resetBtn.addEventListener('click', () => {
           // 1. Stop Rotation
           if (isRotating) { 
@@ -328,12 +375,26 @@
 
           alert('Model reset to default position and scale!');
       });
+      
+      // ✅ NEW: Hide UI Button Click
+      hideUiBtn.addEventListener('click', hideUI);
 
-      // ✅ NEW: Screenshot Button Logic
-      screenshotBtn.addEventListener('click', () => {
-          // A-Frame automatically excludes HTML buttons/UI elements.
-          // It captures the AR background and the 3D model only.
-          scene.components.screenshot.capture('image/jpeg', 1.0);
+
+      // ✅ NEW: Double-Tap/Double-Click Logic to Show UI
+      document.body.addEventListener('click', (event) => {
+          // Check if the target is *outside* the hidden UI container (i.e., on the camera view)
+          if (uiContainer.classList.contains('hidden-ui') && !event.target.closest('.ui-container')) {
+              const currentTime = new Date().getTime();
+              const tapLength = currentTime - lastTap;
+              
+              if (tapLength < DOUBLE_TAP_DELAY && tapLength > 0) {
+                  showUI();
+                  // Reset lastTap to prevent triple/quadruple taps from triggering
+                  lastTap = 0; 
+              } else {
+                  lastTap = currentTime;
+              }
+          }
       });
     </script>
   </body>
