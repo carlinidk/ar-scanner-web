@@ -1,7 +1,7 @@
 <h1 align="center">👗 WebAR Scanner</h1>
 
 <p align="center">
-  <img src="assets/main.jpg" alt="AR Scanner Banner" width="85%">
+  <img src="Assets/main.jpg" alt="AR Scanner Banner" width="85%">
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@ This project marks my first step into blending **tech + fashion** through **Augm
 - 🧠 Blend digital creativity with real-world fashion experiences  
 
 <p align="center">
-  <img src="assets/demo-ar.gif" alt="AR Demo Preview" width="70%">
+  <img src="Assets/demo-ar.gif" alt="AR Demo Preview" width="70%">
 </p>
 
 ---
@@ -50,7 +50,7 @@ This project marks my first step into blending **tech + fashion** through **Augm
 4. Watch your **3D fashion model** come to life in real space!
 
 <p align="center">
-  <img src="assets/scan-demo.png" alt="Scanning Marker Demo" width="60%">
+  <img src="Assets/scan-demo.png" alt="Scanning Marker Demo" width="60%">
 </p>
 
 ---
@@ -78,12 +78,12 @@ This project marks my first step into blending **tech + fashion** through **Augm
 ## 📸 Gallery / Sneak Peek
 
 <p align="center">
-  <img src="assets/preview1.png" alt="AR Preview 1" width="45%">
-  <img src="assets/preview2.png" alt="AR Preview 2" width="45%">
+  <img src="Assets/preview1.png" alt="AR Preview 1" width="45%">
+  <img src="Assets/preview2.png" alt="AR Preview 2" width="45%">
 </p>
 
 <p align="center">
-  <img src="assets/preview3.png" alt="AR Preview 3" width="70%">
+  <img src="Assets/preview3.png" alt="AR Preview 3" width="70%">
 </p>
 
 ---
