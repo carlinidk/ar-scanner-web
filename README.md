@@ -25,7 +25,7 @@ This project marks my first step into blending **tech + fashion** through **Augm
 - 🧠 Blend digital creativity with real-world fashion experiences  
 
 <p align="center">
-  <img src="Assets/demo-ar.gif" alt="AR Demo Preview" width="70%">
+  <img src="Assets/demo.gif" alt="AR Demo Preview" width="70%">
 </p>
 
 ---
