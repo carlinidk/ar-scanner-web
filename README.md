@@ -1,7 +1,7 @@
 <h1 align="center">👗 WebAR Scanner</h1>
 
 <p align="center">
-  <img src="assets/banner.png" alt="AR Scanner Banner" width="85%">
+  <img src="assets/main.jpg" alt="AR Scanner Banner" width="85%">
 </p>
 
 <p align="center">
