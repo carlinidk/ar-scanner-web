@@ -1,4 +1,4 @@
-<h1 align="center">👗 WebAR Scanner</h1>
+<h1 align="center">Carlin's WebAR Scanner</h1>
 
 <p align="center">
   <img src="Assets/main.jpg" alt="AR Scanner Banner" width="85%">
