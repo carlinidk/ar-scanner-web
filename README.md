@@ -50,7 +50,7 @@ This project marks my first step into blending **tech + fashion** through **Augm
 4. Watch your **3D fashion model** come to life in real space!
 
 <p align="center">
-  <img src="Assets/demo.gif" alt="Scanning Marker Demo" width="60%">
+  <img src="Assets/qr-code.png" alt="Scanning Marker Demo" width="60%">
 </p>
 
 ---
