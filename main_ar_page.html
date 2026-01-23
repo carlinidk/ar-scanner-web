@@ -189,67 +189,13 @@
         <p>Initializing Camera...</p>
     </div>
 
-    <div id="info" class="ui-panel">Point camera at the QR Marker 📱</div>
-
-    <div class="ui-container ui-panel" id="uiContainer">
-        <div class="scale-control-row">
-            <input type="range" id="scaleSlider" min="0.01" max="2" step="0.01">
-            <span id="scaleValue"></span>
-        </div>
-        <div class="button-row">
-            <button id="rotateBtn" class="btn-ui" title="Rotate Model">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.18-3.185m-7.524 0V4.5A2.25 2.25 0 0013.5 2.25H8.25A2.25 2.25 0 006 4.5v3.852" /></svg>
-            </button>
-            <button id="resetBtn" class="btn-ui" title="Reset">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rotate-ccw"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.5 15a9 9 0 1 0 0-6v6z"></path></svg>
-            </button>
-            <button id="hideUiBtn" class="btn-ui" title="Hide UI">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L6.228 6.228" /></svg>
-            </button>
-            <button id="showUiBtn" class="btn-ui" title="Show UI" style="display: none;">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.432 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            </button>
-        </div>
-    </div>
-
     <a-scene
-        embedded
-        arjs="sourceType: webcam; debugUIEnabled: false;"
+        arjs
         renderer="logarithmicDepthBuffer: true;"
         vr-mode-ui="enabled: false"
     >
-        <a-assets>
-            <a-asset-item id="planeModel" src="Models/Meshy_AI_Slingshot_Sentinel_0123041741_texture.glb"></a-asset-item>
-        </a-assets>
-
-        <a-entity light="type: ambient; color: #BBB"></a-entity>
-        <a-entity light="type: directional; color: #FFF; intensity: 0.6" position="-0.5 1 1"></a-entity>
-        <a-entity id="orbit-light" light="type: point; color: #FFF; intensity: 0.8; distance: 50" position="0 2 0">
-             <a-animation attribute="position"
-                 dur="10000"
-                 from="-10 5 10"
-                 to="10 5 -10"
-                 repeat="indefinite"
-                 direction="alternate"
-                 easing="linear"></a-animation>
-        </a-entity>
-
-        <a-marker type="pattern" url="Patts/LR.patt" id="marker" emitevents="true">
-            <a-entity
-                id="model"
-                gltf-model="#planeModel"
-                position="0 0 0"
-                animation-mixer="clip: *; loop: repeat; crossFadeDuration: 0;"
-                visible="false"
-            >
-                <a-animation
-                    attribute="scale"
-                    begin="pop-in"
-                    dur="500"
-                    from="0.01 0.01 0.01"
-                    easing="easeOutElastic">
-                </a-animation>
-            </a-entity>
+        <a-marker preset="hiro" id="marker" emitevents="true">
+             <a-box position='0 0.5 0' material='color: red;'></a-box>
         </a-marker>
 
         <a-entity camera></a-entity>
@@ -257,128 +203,9 @@
 
     <script>
         window.addEventListener('DOMContentLoaded', () => {
-            const DEFAULT_SCALE_VALUE = 0.09;
-
             const loader = document.getElementById('loader');
-            const marker = document.getElementById('marker');
-            const model = document.getElementById('model');
-            const info = document.getElementById('info');
-            const rotateBtn = document.getElementById('rotateBtn');
-            const scaleSlider = document.getElementById('scaleSlider');
-            const scaleValueLabel = document.getElementById('scaleValue');
-            const resetBtn = document.getElementById('resetBtn');
-            const uiContainer = document.getElementById('uiContainer');
-            const hideUiBtn = document.getElementById('hideUiBtn');
-            const showUiBtn = document.getElementById('showUiBtn');
-
-            let isRotating = false;
-            let rotationInterval;
-            let arStarted = false;
-
-            const setInitialState = () => {
-                const scaleString = `${DEFAULT_SCALE_VALUE} ${DEFAULT_SCALE_VALUE} ${DEFAULT_SCALE_VALUE}`;
-                model.setAttribute('scale', scaleString);
-                scaleSlider.value = DEFAULT_SCALE_VALUE;
-                scaleValueLabel.textContent = `${DEFAULT_SCALE_VALUE.toFixed(2)}x`;
-                const popinAnim = model.querySelector('a-animation[attribute="scale"]');
-                if (popinAnim) {
-                    popinAnim.setAttribute('to', scaleString);
-                }
-            };
-
-            const startAR = () => {
-                if (arStarted) return;
-                arStarted = true;
-                loader.classList.add('hidden');
-                info.classList.add('visible');
-                setInitialState();
-            };
-
-            // Fallback timer in case AR.js event doesn't fire
-            const fallbackTimeout = setTimeout(() => {
-                if (arStarted) return;
-                loader.classList.add('hidden');
-                info.textContent = 'Error: Could not start AR. Check camera permissions.';
-                info.classList.add('visible', 'error');
-            }, 10000);
-
             window.addEventListener('arjs-video-loaded', () => {
-                clearTimeout(fallbackTimeout);
-                startAR();
-            });
-
-            marker.addEventListener('markerFound', () => {
-                info.classList.remove('visible');
-                model.setAttribute('visible', true);
-                model.emit('pop-in');
-                setTimeout(() => uiContainer.classList.add('visible'), 300);
-            });
-
-            marker.addEventListener('markerLost', () => {
-                model.setAttribute('visible', false);
-                if (!info.classList.contains('error')) {
-                    info.classList.add('visible');
-                }
-                uiContainer.classList.remove('visible');
-            });
-
-            rotateBtn.addEventListener('click', () => {
-                if (!isRotating) {
-                    rotationInterval = setInterval(() => {
-                        const rot = model.getAttribute('rotation');
-                        rot.y += 1;
-                        model.setAttribute('rotation', rot);
-                    }, 20);
-                    rotateBtn.style.background = 'var(--brand-color)';
-                } else {
-                    clearInterval(rotationInterval);
-                    rotateBtn.style.background = '';
-                }
-                isRotating = !isRotating;
-            });
-
-            scaleSlider.addEventListener('input', () => {
-                const scaleValue = parseFloat(scaleSlider.value);
-                const scaleString = `${scaleValue} ${scaleValue} ${scaleValue}`;
-                model.setAttribute('scale', scaleString);
-                scaleValueLabel.textContent = `${scaleValue.toFixed(2)}x`;
-                
-                const popinAnim = model.querySelector('a-animation[attribute="scale"]');
-                if (popinAnim) {
-                    const from = popinAnim.getAttribute('from');
-                    popinAnim.setAttribute('to', scaleString);
-                }
-            });
-
-            resetBtn.addEventListener('click', () => {
-                if (isRotating) {
-                    clearInterval(rotationInterval);
-                    isRotating = false;
-                    rotateBtn.style.background = '';
-                }
-                model.setAttribute('rotation', '0 0 0');
-
-                const scaleString = `${DEFAULT_SCALE_VALUE} ${DEFAULT_SCALE_VALUE} ${DEFAULT_SCALE_VALUE}`;
-                model.setAttribute('scale', scaleString);
-                scaleSlider.value = DEFAULT_SCALE_VALUE;
-                scaleValueLabel.textContent = `${DEFAULT_SCALE_VALUE.toFixed(2)}x`;
-            });
-            
-            
-            hideUiBtn.addEventListener('click', () => {
-                 uiContainer.classList.remove('visible');
-                 info.classList.remove('visible');
-                 hideUiBtn.style.display = 'none';
-                 showUiBtn.style.display = 'flex';
-            });
-
-            showUiBtn.addEventListener('click', () => {
-                uiContainer.classList.add('visible');
-                if (!model.getAttribute('visible')) {
-                    info.classList.add('visible');
-                }
-                hideUiBtn.style.display = 'flex';
-                showUiBtn.style.display = 'none';
+                loader.classList.add('hidden');
             });
         });
     </script>
